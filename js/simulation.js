@@ -1,21 +1,21 @@
-/**
- * MÁS ALLÁ DE LO SALVAJE - Motor de Simulación por Turnos
- * Sistema de extracción de recursos, población y ciclo económico
+﻿/**
+ * MÃS ALLÃ DE LO SALVAJE - Motor de SimulaciÃ³n por Turnos
+ * Sistema de extracciÃ³n de recursos, poblaciÃ³n y ciclo econÃ³mico
  */
 
 // =====================================================
-// ESTADO DE SIMULACIÓN
+// ESTADO DE SIMULACIÃ“N
 // =====================================================
 let estadoSimulacion = {
     turno: 0,
-    // Cuotas de población: [{ id, rol, naturaleza, medidas, asignacion }]
+    // Cuotas de poblaciÃ³n: [{ id, rol, naturaleza, medidas, asignacion }]
     poblacion: [],
-    // Almacén: { "Madera Útil": 0, ... }
+    // AlmacÃ©n: { "Madera Ãštil": 0, ... }
     almacen: {},
-    // Economía
+    // EconomÃ­a
     doblones: 0,
     alimentos: 0,
-    // Inmigración latente por tipo de población
+    // InmigraciÃ³n latente por tipo de poblaciÃ³n
     inmigracionPendientePorTipo: {
         Neutral: 0,
         Positiva: 0,
@@ -23,34 +23,34 @@ let estadoSimulacion = {
         Monstruo: 0,
         Artificial: 0
     },
-    // Tipo de población para inmigración externa
+    // Tipo de poblaciÃ³n para inmigraciÃ³n externa
     tipoInmigracion: "Neutral",
-    // Subtipo para inmigración Artificial (Neutral, Positiva, Negativa, Monstruo)
+    // Subtipo para inmigraciÃ³n Artificial (Neutral, Positiva, Negativa, Monstruo)
     subtipoInmigracionArtificial: "Neutral",
-    // Recursos especiales (no ocupan almacén)
+    // Recursos especiales (no ocupan almacÃ©n)
     recursosEspeciales: {
         ideas: 0,
         influencia: 0
     },
     // Estado de edificios: { nombreEdificio: { grado, cuotasAsignadas, recetaActual } }
     edificiosEstado: {},
-    // Log del último turno
+    // Log del Ãºltimo turno
     logTurno: [],
-    // Historial de turnos para deshacer (últimos 5 snapshots)
+    // Historial de turnos para deshacer (Ãºltimos 5 snapshots)
     historialTurnos: [],
     // Construcciones en progreso: [{ id, nombre, turnosRestantes, turnosTotales, poblacionAsignada, costoOpcion }]
     construccionesEnProgreso: [],
     // Historial de comercio: [{ turno, recurso, cantidad, tipo: 'entrada'|'salida', comerciante }]
     historialComercio: [],
-    // Estado de Devoción
+    // Estado de DevociÃ³n
     estadoDevocion: {
-        // Pool de puntos por tipo de devoción (cap 100 cada uno)
+        // Pool de puntos por tipo de devociÃ³n (cap 100 cada uno)
         poolPorTipo: { Positiva: 0, Negativa: 0, Neutral: 0, Salvaje: 0 },
         // Flag de sincretismo activo
         isSyncretic: false,
-        // Tipos en sincretismo (máx 2)
+        // Tipos en sincretismo (mÃ¡x 2)
         syncreticTypes: [],
-        // Tipo de devoción dominante (con más devotos)
+        // Tipo de devociÃ³n dominante (con mÃ¡s devotos)
         dominantType: null,
         // Flag de sacrilegio (devociones opuestas activas)
         sacrilegio: false,
@@ -60,7 +60,7 @@ let estadoSimulacion = {
 };
 
 /**
- * Carga un estado de simulación existente
+ * Carga un estado de simulaciÃ³n existente
  */
 function cargarEstadoSimulacion(estadoGuardado) {
     if (estadoGuardado) {
@@ -74,7 +74,7 @@ function cargarEstadoSimulacion(estadoGuardado) {
             estadoSimulacion.almacen = { ...estadoGuardado.almacen };
         }
 
-        // === MIGRACIÓN: inmigracionPendiente => inmigracionPendientePorTipo ===
+        // === MIGRACIÃ“N: inmigracionPendiente => inmigracionPendientePorTipo ===
         if (typeof estadoGuardado.inmigracionPendiente === 'number' && !estadoGuardado.inmigracionPendientePorTipo) {
             // Migrar el valor antiguo al tipo "Neutral"
             estadoSimulacion.inmigracionPendientePorTipo = {
@@ -95,11 +95,11 @@ function cargarEstadoSimulacion(estadoGuardado) {
 }
 
 // =====================================================
-// INICIALIZACIÓN DE POBLACIÓN
+// INICIALIZACIÃ“N DE POBLACIÃ“N
 // =====================================================
 
 /**
- * Crea la población inicial del asentamiento
+ * Crea la poblaciÃ³n inicial del asentamiento
  * @param {Array} configuracion - [{rol: "Plebeyo", naturaleza: "Neutral", cantidad: 2, subtipo: "Neutral"}, ...]
  */
 function inicializarPoblacion(configuracion) {
@@ -129,25 +129,25 @@ function inicializarPoblacion(configuracion) {
 }
 
 /**
- * Obtiene el total de población en medidas
+ * Obtiene el total de poblaciÃ³n en medidas
  */
 function obtenerPoblacionTotal() {
     return estadoSimulacion.poblacion.reduce((sum, cuota) => sum + cuota.medidas, 0);
 }
 
 /**
- * Obtiene el total de cuotas de un rol específico
+ * Obtiene el total de cuotas de un rol especÃ­fico
  */
 function obtenerCuotasPorRol(rol) {
     return estadoSimulacion.poblacion.filter(c => c.rol === rol);
 }
 
 // =====================================================
-// ASIGNACIÓN DE TRABAJO
+// ASIGNACIÃ“N DE TRABAJO
 // =====================================================
 
 /**
- * Asigna una cuota de población a trabajar un recurso
+ * Asigna una cuota de poblaciÃ³n a trabajar un recurso
  * @param {number} cuotaId - ID de la cuota
  * @param {string|null} recurso - Nombre del recurso o null para desasignar
  */
@@ -168,18 +168,18 @@ function obtenerTrabajadoresRecurso(recurso) {
 }
 
 // =====================================================
-// CÁLCULO DE EXTRACCIÓN
+// CÃLCULO DE EXTRACCIÃ“N
 // =====================================================
 
 /**
- * Calcula la producción pasiva de un recurso (sin trabajadores asignados)
- * Fórmula: (Mod_Abundancia + Mod_Propiedades) - 1
- * Si el resultado es < 0, la producción es 0.
+ * Calcula la producciÃ³n pasiva de un recurso (sin trabajadores asignados)
+ * FÃ³rmula: (Mod_Abundancia + Mod_Propiedades) - 1
+ * Si el resultado es < 0, la producciÃ³n es 0.
  */
 function calcularExtraccionPasiva(recurso, abundancia, modPropiedades) {
     // Obtener modificador de abundancia (-2, 0, +1, +2, etc)
     // Nota: Necesitamos acceder a obtenerModificadorAbundancia desde data.js
-    // Si no está global, usamos el objeto directamente
+    // Si no estÃ¡ global, usamos el objeto directamente
     const modAbundancia = NIVELES_ABUNDANCIA[abundancia]?.modificador ?? 0;
 
     // Formula: (ModAbundancia + ModBioma) - 1
@@ -189,8 +189,8 @@ function calcularExtraccionPasiva(recurso, abundancia, modPropiedades) {
 }
 
 /**
- * Calcula la producción activa de un recurso (con trabajadores asignados)
- * Fórmula: Mod_Abundancia + Mod_Propiedades + 2 + (trabajadores adicionales) + Calidad/5
+ * Calcula la producciÃ³n activa de un recurso (con trabajadores asignados)
+ * FÃ³rmula: Mod_Abundancia + Mod_Propiedades + 2 + (trabajadores adicionales) + Calidad/5
  * El primer trabajador produce 2, cada trabajador adicional produce 1
  * (No se multiplica por 10, el resultado son Medidas directas)
  */
@@ -209,7 +209,7 @@ function calcularExtraccionActiva(recurso, abundancia, modPropiedades, calidad, 
 }
 
 /**
- * Calcula la producción total de todos los recursos
+ * Calcula la producciÃ³n total de todos los recursos
  * @param {object} recursos - { nombreRecurso: { abundancia, modPropiedades } }
  * @param {number} calidad - Calidad total del asentamiento
  * @param {object} bonificaciones - { "nombreRecurso": valor } bonificadores de peculiaridades/propiedades
@@ -224,7 +224,7 @@ function calcularProduccionTotal(recursos, calidad, bonificaciones = {}) {
         // modPropiedades base del recurso + bonificadores de peculiaridades/propiedades
         let modTotal = data.modPropiedades || 0;
 
-        // Aplicar bonificaciones específicas del recurso
+        // Aplicar bonificaciones especÃ­ficas del recurso
         if (bonificaciones[nombre]) {
             modTotal += bonificaciones[nombre];
         }
@@ -246,7 +246,7 @@ function calcularProduccionTotal(recursos, calidad, bonificaciones = {}) {
                 trabajadores: numTrabajadores
             };
         } else {
-            // Recursos exóticos NO tienen producción pasiva - solo activa con trabajadores
+            // Recursos exÃ³ticos NO tienen producciÃ³n pasiva - solo activa con trabajadores
             const esExotico = data.esExotico === true;
             produccion[nombre] = {
                 tipo: "pasiva",
@@ -261,7 +261,7 @@ function calcularProduccionTotal(recursos, calidad, bonificaciones = {}) {
 }
 
 /**
- * Asigna una cuota de población a un recurso específico
+ * Asigna una cuota de poblaciÃ³n a un recurso especÃ­fico
  */
 function asignarPoblacionARecurso(idCuota, nombreRecurso) {
     const cuota = estadoSimulacion.poblacion.find(c => c.id === parseInt(idCuota));
@@ -297,16 +297,16 @@ function ejecutarTurno(asentamiento) {
     estadoSimulacion.logTurno = [];
     estadoSimulacion.turno++;
 
-    logear(`═══ TURNO ${estadoSimulacion.turno} ═══`);
+    logear(`â•â•â• TURNO ${estadoSimulacion.turno} â•â•â•`);
 
     try {
         // Fase 1: Sustento
         const resultadoSustento = faseAlimentacion();
 
-        // Fase 2: Economía
+        // Fase 2: EconomÃ­a
         const resultadoEconomia = faseEconomia(asentamiento);
 
-        // Fase 2.5: Avanzar construcciones si existe la función
+        // Fase 2.5: Avanzar construcciones si existe la funciÃ³n
         if (typeof avanzarConstrucciones === 'function') {
             avanzarConstrucciones(asentamiento);
         }
@@ -314,7 +314,7 @@ function ejecutarTurno(asentamiento) {
         // Fase 3: Crecimiento
         const resultadoCrecimiento = faseCrecimiento(asentamiento);
 
-        // Fase 4: Devoción (generar puntos por devotos)
+        // Fase 4: DevociÃ³n (generar puntos por devotos)
         const resultadoDevocion = faseDevocion();
 
         return {
@@ -327,7 +327,7 @@ function ejecutarTurno(asentamiento) {
         };
     } catch (error) {
         console.error('Error en ejecutarTurno:', error);
-        logear(`❌ Error durante el turno: ${error.message}`);
+        logear(`âŒ Error durante el turno: ${error.message}`);
         return {
             turno: estadoSimulacion.turno,
             error: error.message,
@@ -337,14 +337,16 @@ function ejecutarTurno(asentamiento) {
 }
 
 /**
- * Fase 1: Alimentación
+ * Fase 1: AlimentaciÃ³n
  * Cada Cuota completa consume 1 medida de alimento
  */
 function faseAlimentacion() {
-    logear("📍 Fase 1: Sustento");
+    logear("ðŸ“ Fase 1: Sustento");
 
     // Calcular cuotas que consumen alimentos (excluir Artificiales)
     const cuotasQueConsumen = estadoSimulacion.poblacion.filter(c => {
+        // Artificiales NUNCA consumen alimento
+        if (c.naturaleza === "Artificial") return false;
         const nat = NATURALEZAS_POBLACION[c.naturaleza];
         return nat?.consumeAlimento !== false; // Por defecto true
     });
@@ -367,10 +369,10 @@ function faseAlimentacion() {
 
     if (poolAlimentos >= alimentosNecesarios) {
         // Consumir proporcionalmente o secuencialmente
-        // Secuencial es más sencillo y predecible
+        // Secuencial es mÃ¡s sencillo y predecible
         let restante = alimentosNecesarios;
 
-        // Orden de preferencia: "Alimento" genérico primero, luego el resto
+        // Orden de preferencia: "Alimento" genÃ©rico primero, luego el resto
         const listaAlimentos = recursosAlmacen
             .filter(([n]) => RECURSOS[n]?.categoria === "Alimento")
             .sort((a, b) => (a[0] === "Alimento" ? -1 : 1));
@@ -383,7 +385,7 @@ function faseAlimentacion() {
             consumido += aConsumir;
         }
 
-        logear(`  ✓ Alimentados: ${numCuotas} cuotas (${consumido} medidas)`);
+        logear(`  âœ“ Alimentados: ${numCuotas} cuotas (${consumido} medidas)`);
     } else {
         // Consumir todo lo que hay
         recursosAlmacen.forEach(([nombre, cantidad]) => {
@@ -394,32 +396,32 @@ function faseAlimentacion() {
         });
 
         hambruna = true;
-        logear(`  ⚠️ HAMBRUNA: Solo ${consumido}/${alimentosNecesarios} medidas disponibles`);
+        logear(`  âš ï¸ HAMBRUNA: Solo ${consumido}/${alimentosNecesarios} medidas disponibles`);
 
         // En hambruna: muertes aleatorias (1d4)
         const muertes = Math.floor(Math.random() * 4) + 1;
         aplicarMuertes(muertes);
-        logear(`  💀 Muertes por hambruna: ${muertes}`);
+        logear(`  ðŸ’€ Muertes por hambruna: ${muertes}`);
     }
 
     return { hambruna, consumido, necesarios: alimentosNecesarios };
 }
 
 /**
- * Fase 2: Economía
- * Producción, tributos, mantenimiento
+ * Fase 2: EconomÃ­a
+ * ProducciÃ³n, tributos, mantenimiento
  */
 function faseEconomia(asentamiento) {
-    logear("📍 Fase 2: Economía");
+    logear("ðŸ“ Fase 2: EconomÃ­a");
 
     // Calcular calidad total
     const stats = calcularEstadisticasTotales(asentamiento);
     const calidad = stats.calidadTotal;
 
-    // Producción de recursos
+    // ProducciÃ³n de recursos
     const produccion = calcularProduccionTotal(asentamiento.recursos || {}, calidad);
 
-    // Sumar al almacén
+    // Sumar al almacÃ©n
     let totalProducido = 0;
     Object.entries(produccion).forEach(([recurso, data]) => {
         if (data.medidas > 0) {
@@ -428,7 +430,7 @@ function faseEconomia(asentamiento) {
         }
     });
 
-    // Sumar producción de Edificios al almacén
+    // Sumar producciÃ³n de Edificios al almacÃ©n
     const produccionEdificios = calcularProduccionEdificios(asentamiento.edificios || [], stats);
 
     Object.entries(produccionEdificios).forEach(([recurso, data]) => {
@@ -436,7 +438,7 @@ function faseEconomia(asentamiento) {
         if (recurso === "Doblones") {
             if (data.total > 0) {
                 estadoSimulacion.doblones += data.total;
-                logear(`  💰 Producción de edificios: +${data.total} Doblones`);
+                logear(`  ðŸ’° ProducciÃ³n de edificios: +${data.total} Doblones`);
             }
             return;
         }
@@ -456,13 +458,13 @@ function faseEconomia(asentamiento) {
             estadoSimulacion.almacen[recurso] = (estadoSimulacion.almacen[recurso] || 0) + data.total;
             if (estadoSimulacion.almacen[recurso] < 0) {
                 // Log shortage?
-                logear(`  ⚠️ Escasez de insumos: ${recurso}`);
+                logear(`  âš ï¸ Escasez de insumos: ${recurso}`);
                 estadoSimulacion.almacen[recurso] = 0;
             }
         }
     });
 
-    logear(`  📦 Producción total: ${totalProducido} medidas`);
+    logear(`  ðŸ“¦ ProducciÃ³n total: ${totalProducido} medidas`);
 
     // Tributos
     const cuotasPoblacion = estadoSimulacion.poblacion.length;
@@ -471,7 +473,7 @@ function faseEconomia(asentamiento) {
     estadoSimulacion.doblones += dobleonesTributo;
 
     if (dobleonesTributo > 0) {
-        logear(`  💰 Tributos recaudados: ${dobleonesTributo} doblones`);
+        logear(`  ðŸ’° Tributos recaudados: ${dobleonesTributo} doblones`);
     }
 
     // --- MANTENIMIENTO EDIFICIOS ---
@@ -480,7 +482,7 @@ function faseEconomia(asentamiento) {
     const edificiosList = asentamiento.edificios || [];
 
     // Obtener modificador global de Mantenimiento desde las stats (Bioma/Propiedades)
-    // Nota: "stats" ya se calculó arriba en línea 304
+    // Nota: "stats" ya se calculÃ³ arriba en lÃ­nea 304
     const modMantenimientoGlobal = stats.bonificaciones["Mantenimiento"] || 0;
 
     edificiosList.forEach(item => {
@@ -515,7 +517,7 @@ function faseEconomia(asentamiento) {
         // "Que el Mantenimiento en Stats_Invertidas se le sume al valor del Mantenimiento de cualquier edificio."
         let costeFinal = baseDoblones + modMantenimientoGlobal;
 
-        // Evitar costes negativos (¿o permitimos descuentos que den dinero? Asumimos coste >= 0)
+        // Evitar costes negativos (Â¿o permitimos descuentos que den dinero? Asumimos coste >= 0)
         if (costeFinal < 0) costeFinal = 0;
 
         mantDoblones += costeFinal;
@@ -523,7 +525,7 @@ function faseEconomia(asentamiento) {
 
     if (mantDoblones > 0) {
         estadoSimulacion.doblones -= mantDoblones;
-        logear(`  💸 Mantenimiento pagado: ${mantDoblones} Doblones`);
+        logear(`  ðŸ’¸ Mantenimiento pagado: ${mantDoblones} Doblones`);
         // Handle Debt? Simple for now.
     }
 
@@ -533,25 +535,25 @@ function faseEconomia(asentamiento) {
         if (estadoSimulacion.almacen[k] && estadoSimulacion.almacen[k] >= v) {
             estadoSimulacion.almacen[k] -= v;
             if (estadoSimulacion.almacen[k] <= 0) delete estadoSimulacion.almacen[k];
-            logear(`  💸 Mantenimiento pagado: ${v} ${k}`);
+            logear(`  ðŸ’¸ Mantenimiento pagado: ${v} ${k}`);
         } else {
             // Not enough maintenance resources?
-            logear(`  ⚠️ Falta mantenimiento: ${v} ${k}`);
+            logear(`  âš ï¸ Falta mantenimiento: ${v} ${k}`);
         }
     });
 
-    // --- MANTENIMIENTO POBLACIÓN ARTIFICIAL ---
+    // --- MANTENIMIENTO POBLACIÃ“N ARTIFICIAL ---
     let mantArtificial = 0;
     estadoSimulacion.poblacion.forEach(cuota => {
         const nat = NATURALEZAS_POBLACION[cuota.naturaleza];
-        if (nat && nat.mantenimientoDoblones) {
-            mantArtificial += nat.mantenimientoDoblones;
+        if (cuota.naturaleza === "Artificial") {
+            mantArtificial += 1; // 1 Doblón per Artificial quota
         }
     });
 
     if (mantArtificial > 0) {
         estadoSimulacion.doblones -= mantArtificial;
-        logear(`  🤖 Mantenimiento Artificial: ${mantArtificial} Doblones`);
+        logear(`  ðŸ¤– Mantenimiento Artificial: ${mantArtificial} Doblones`);
     }
 
     return { produccion, tributos: dobleonesTributo, mantenimiento: mantDoblones + mantArtificial };
@@ -561,7 +563,7 @@ function faseEconomia(asentamiento) {
  * Fase 3: Crecimiento poblacional
  */
 function faseCrecimiento(asentamiento) {
-    logear("📍 Fase 3: Crecimiento");
+    logear("ðŸ“ Fase 3: Crecimiento");
 
     const stats = calcularEstadisticasTotales(asentamiento);
     let calidad = stats.calidadTotal;
@@ -574,7 +576,7 @@ function faseCrecimiento(asentamiento) {
         };
     }
 
-    // CÁLCULO DE HAMBRUNA (excluyendo Artificiales)
+    // CÃLCULO DE HAMBRUNA (excluyendo Artificiales)
     const recursos = asentamiento.recursos || {};
     const produccionBioma = calcularProduccionTotal(recursos, calidad, stats.bonificaciones || {});
     const produccionEdificios = calcularProduccionEdificios(asentamiento.edificios || [], stats);
@@ -596,6 +598,8 @@ function faseCrecimiento(asentamiento) {
 
     // Solo las poblaciones que consumen alimentos cuentan
     const cuotasQueConsumen = estadoSimulacion.poblacion.filter(c => {
+        // Artificiales NUNCA consumen alimento
+        if (c.naturaleza === "Artificial") return false;
         const nat = NATURALEZAS_POBLACION[c.naturaleza];
         return nat?.consumeAlimento !== false; // Por defecto true
     }).length;
@@ -610,22 +614,22 @@ function faseCrecimiento(asentamiento) {
     let globalPuedeReproducir = true;
 
     if (balanceAlimentos < 0) {
-        logear(`  ⚠️ Déficit Alimentario (${balanceAlimentos}). Crecimiento natural detenido.`);
+        logear(`  âš ï¸ DÃ©ficit Alimentario (${balanceAlimentos}). Crecimiento natural detenido.`);
         globalPuedeReproducir = false;
 
         if (almacenAlimento <= 0) {
             estadoSimulacion.esHambruna = true;
             calidad -= 8;
-            logear(`  ☠️ ¡HAMBRUNA! Sin reservas. Calidad -8.`);
+            logear(`  â˜ ï¸ Â¡HAMBRUNA! Sin reservas. Calidad -8.`);
         }
     }
 
-    // === REPRODUCCIÓN POR TIPO ===
+    // === REPRODUCCIÃ“N POR TIPO ===
     // Solo las naturalezas que pueden reproducir
     const reproduccionPorTipo = { Neutral: 0, Positiva: 0, Negativa: 0, Monstruo: 0, Artificial: 0 };
 
     if (globalPuedeReproducir) {
-        // Reproducción = 1 por cada cuota de población (sin importar rol)
+        // ReproducciÃ³n = 1 por cada cuota de poblaciÃ³n (sin importar rol)
         estadoSimulacion.poblacion.forEach(cuota => {
             const tipo = cuota.naturaleza || "Neutral";
             const nat = NATURALEZAS_POBLACION[tipo];
@@ -639,7 +643,7 @@ function faseCrecimiento(asentamiento) {
         });
     }
 
-    // === INMIGRACIÓN ===
+    // === INMIGRACIÃ“N ===
     let inmigracionBase = gradoData.inmigracion + calidad;
 
     // Bono por monstruos (global)
@@ -651,11 +655,11 @@ function faseCrecimiento(asentamiento) {
     const inmigracionTotal = Math.max(0, inmigracionBase);
     const tipoInmigracion = estadoSimulacion.tipoInmigracion || "Neutral";
 
-    // Aplicar inmigración al tipo seleccionado
+    // Aplicar inmigraciÃ³n al tipo seleccionado
     estadoSimulacion.inmigracionPendientePorTipo[tipoInmigracion] =
         (estadoSimulacion.inmigracionPendientePorTipo[tipoInmigracion] || 0) + inmigracionTotal;
 
-    // Aplicar reproducción por tipo
+    // Aplicar reproducciÃ³n por tipo
     Object.keys(reproduccionPorTipo).forEach(tipo => {
         if (reproduccionPorTipo[tipo] > 0) {
             estadoSimulacion.inmigracionPendientePorTipo[tipo] =
@@ -663,8 +667,8 @@ function faseCrecimiento(asentamiento) {
         }
     });
 
-    logear(`  👥 Inmigración (${tipoInmigracion}): +${inmigracionTotal}`);
-    logear(`  👶 Reproducción: ${Object.entries(reproduccionPorTipo).filter(([k, v]) => v > 0).map(([k, v]) => `${k}: +${v}`).join(', ') || 'Ninguna'}`);
+    logear(`  ðŸ‘¥ InmigraciÃ³n (${tipoInmigracion}): +${inmigracionTotal}`);
+    logear(`  ðŸ‘¶ ReproducciÃ³n: ${Object.entries(reproduccionPorTipo).filter(([k, v]) => v > 0).map(([k, v]) => `${k}: +${v}`).join(', ') || 'Ninguna'}`);
 
     console.log('faseCrecimiento IMMIGRATION:', {
         inmigracionBase,
@@ -675,7 +679,7 @@ function faseCrecimiento(asentamiento) {
         CUOTA_POBLACION: CONVERSION.CUOTA_POBLACION
     });
 
-    // === CONSOLIDACIÓN POR TIPO ===
+    // === CONSOLIDACIÃ“N POR TIPO ===
     let nuevasCuotas = 0;
     const tiposPoblacion = ["Neutral", "Positiva", "Negativa", "Monstruo", "Artificial"];
 
@@ -699,7 +703,7 @@ function faseCrecimiento(asentamiento) {
 
             estadoSimulacion.poblacion.push(nuevaCuota);
             nuevasCuotas++;
-            logear(`  🎉 Nueva cuota de ${tipo}${tipo === "Artificial" ? ` (${nuevaCuota.subtipo})` : ''} formada.`);
+            logear(`  ðŸŽ‰ Nueva cuota de ${tipo}${tipo === "Artificial" ? ` (${nuevaCuota.subtipo})` : ''} formada.`);
         }
     });
 
@@ -707,19 +711,19 @@ function faseCrecimiento(asentamiento) {
     const pendientesLog = tiposPoblacion
         .map(t => `${t}: ${estadoSimulacion.inmigracionPendientePorTipo[t] || 0}`)
         .join(', ');
-    logear(`  📊 Pendiente por tipo: ${pendientesLog}`);
+    logear(`  ðŸ“Š Pendiente por tipo: ${pendientesLog}`);
 
     return { inmigracionTotal, reproduccionPorTipo, nuevasCuotas };
 }
 
 /**
- * Fase 4: Devoción
- * Genera puntos de devoción por cada Devoto activo
+ * Fase 4: DevociÃ³n
+ * Genera puntos de devociÃ³n por cada Devoto activo
  */
 function faseDevocion() {
-    logear("📍 Fase 4: Devoción");
+    logear("ðŸ“ Fase 4: DevociÃ³n");
 
-    // Inicializar estado de devoción si no existe
+    // Inicializar estado de devociÃ³n si no existe
     if (!estadoSimulacion.estadoDevocion) {
         estadoSimulacion.estadoDevocion = {
             poolPorTipo: { Positiva: 0, Negativa: 0, Neutral: 0, Salvaje: 0 },
@@ -743,21 +747,21 @@ function faseDevocion() {
             if (cuota.rol === "Devoto") {
                 const tipoNat = cuota.naturaleza || "Neutral";
 
-                // Mapear naturaleza a tipo de devoción
+                // Mapear naturaleza a tipo de devociÃ³n
                 if (tipoNat === "Positiva" || tipoNat === "Negativa" || tipoNat === "Neutral") {
                     devotosPorTipo[tipoNat]++;
                     totalDevotos++;
                 } else if (tipoNat === "Monstruo") {
-                    // Monstruos generan devoción Salvaje
+                    // Monstruos generan devociÃ³n Salvaje
                     devotosPorTipo["Salvaje"]++;
                     totalDevotos++;
                 }
-                // Artificiales no generan devoción
+                // Artificiales no generan devociÃ³n
             }
         });
     }
 
-    // Generar puntos de devoción (+1 por devoto)
+    // Generar puntos de devociÃ³n (+1 por devoto)
     let generacion = {};
     Object.entries(devotosPorTipo).forEach(([tipo, count]) => {
         if (count > 0) {
@@ -766,9 +770,9 @@ function faseDevocion() {
             generacion[tipo] = count;
 
             if (devocion.poolPorTipo[tipo] >= CAP_DEVOCION) {
-                logear(`  🙏 ${tipo}: +${count} → ${devocion.poolPorTipo[tipo]} (¡MÁXIMO!)`);
+                logear(`  ðŸ™ ${tipo}: +${count} â†’ ${devocion.poolPorTipo[tipo]} (Â¡MÃXIMO!)`);
             } else {
-                logear(`  🙏 ${tipo}: +${count} → ${devocion.poolPorTipo[tipo]}`);
+                logear(`  ðŸ™ ${tipo}: +${count} â†’ ${devocion.poolPorTipo[tipo]}`);
             }
         }
     });
@@ -778,13 +782,13 @@ function faseDevocion() {
         (devotosPorTipo["Neutral"] > 0 && devotosPorTipo["Salvaje"] > 0);
 
     if (haySacrilegio && !devocion.sacrilegio) {
-        logear("  ⚠️ ¡SACRILEGIO! Devociones opuestas detectadas.");
+        logear("  âš ï¸ Â¡SACRILEGIO! Devociones opuestas detectadas.");
     }
     devocion.sacrilegio = haySacrilegio;
 
     if (haySacrilegio) {
         devocion.turnosSacrilegio++;
-        logear(`  💀 Turnos en sacrilegio: ${devocion.turnosSacrilegio}`);
+        logear(`  ðŸ’€ Turnos en sacrilegio: ${devocion.turnosSacrilegio}`);
     } else {
         devocion.turnosSacrilegio = 0;
     }
@@ -801,7 +805,7 @@ function faseDevocion() {
     devocion.dominantType = dominante;
 
     if (totalDevotos === 0) {
-        logear("  ⚪ Sin devotos activos.");
+        logear("  âšª Sin devotos activos.");
     }
 
     return {
@@ -834,7 +838,7 @@ function aplicarMuertes(cantidad) {
         restantes -= quitar;
     }
 
-    // Eliminar cuotas vacías
+    // Eliminar cuotas vacÃ­as
     estadoSimulacion.poblacion = estadoSimulacion.poblacion.filter(c => c.medidas > 0);
 }
 
@@ -854,7 +858,7 @@ function obtenerResumenEstado() {
 }
 
 /**
- * Resetea el estado de simulación
+ * Resetea el estado de simulaciÃ³n
  */
 function resetearSimulacion() {
     estadoSimulacion = {
@@ -899,7 +903,7 @@ function guardarSnapshotTurno(asentamiento) {
         asentamientoEdificios: asentamiento?.edificios || []
     }));
 
-    // Mantener solo los últimos 5 snapshots
+    // Mantener solo los Ãºltimos 5 snapshots
     estadoSimulacion.historialTurnos.push(snapshot);
     if (estadoSimulacion.historialTurnos.length > 5) {
         estadoSimulacion.historialTurnos.shift();
@@ -907,7 +911,7 @@ function guardarSnapshotTurno(asentamiento) {
 }
 
 /**
- * Deshace el último turno restaurando el snapshot anterior
+ * Deshace el Ãºltimo turno restaurando el snapshot anterior
  * @returns {boolean} true si se pudo deshacer, false si no hay historial
  */
 function deshacerTurno() {
@@ -935,7 +939,7 @@ function deshacerTurno() {
     estadoSimulacion.construccionesEnProgreso = snapshot.construccionesEnProgreso || [];
     estadoSimulacion.historialComercio = snapshot.historialComercio || [];
     estadoSimulacion.historialTurnos = historialActual;
-    estadoSimulacion.logTurno = ["⏪ Turno deshecho"];
+    estadoSimulacion.logTurno = ["âª Turno deshecho"];
 
     // Devolver los edificios del asentamiento para restaurarlos en la UI
     return {
@@ -945,11 +949,11 @@ function deshacerTurno() {
 }
 
 // =====================================================
-// SISTEMA DE CONSTRUCCIÓN EN PROGRESO
+// SISTEMA DE CONSTRUCCIÃ“N EN PROGRESO
 // =====================================================
 
 /**
- * Inicia una nueva construcción
+ * Inicia una nueva construcciÃ³n
  * @param {string} nombreEdificio - Nombre del edificio
  * @param {object} costoOpcion - Coste elegido
  * @param {number} turnosTotales - Turnos necesarios (default 1)
@@ -966,14 +970,14 @@ function iniciarConstruccion(nombreEdificio, costoOpcion, turnosTotales = 1, esM
         esMejora: esMejora,
         edificioId: edificioId
     });
-    logear(`🏗️ Construcción iniciada: ${nombreEdificio} (${turnosTotales} turnos)`);
+    logear(`ðŸ—ï¸ ConstrucciÃ³n iniciada: ${nombreEdificio} (${turnosTotales} turnos)`);
     return id;
 }
 
 /**
- * Asigna población a una construcción en progreso
- * @param {string} construccionId - ID de la construcción
- * @param {number} cuotas - Número de cuotas a asignar
+ * Asigna poblaciÃ³n a una construcciÃ³n en progreso
+ * @param {string} construccionId - ID de la construcciÃ³n
+ * @param {number} cuotas - NÃºmero de cuotas a asignar
  */
 function asignarPoblacionConstruccion(construccionId, cuotas) {
     const construccion = estadoSimulacion.construccionesEnProgreso.find(c => c.id === construccionId);
@@ -983,7 +987,7 @@ function asignarPoblacionConstruccion(construccionId, cuotas) {
 }
 
 /**
- * Avanza las construcciones que tienen población asignada
+ * Avanza las construcciones que tienen poblaciÃ³n asignada
  * @param {object} asentamiento - Datos del asentamiento para agregar edificios completados
  * @returns {Array} Lista de edificios completados
  */
@@ -991,17 +995,17 @@ function avanzarConstrucciones(asentamiento) {
     const completados = [];
 
     estadoSimulacion.construccionesEnProgreso = estadoSimulacion.construccionesEnProgreso.filter(c => {
-        // Solo avanza si tiene población asignada
+        // Solo avanza si tiene poblaciÃ³n asignada
         if (c.poblacionAsignada > 0) {
             // El progreso es igual a la cantidad de cuotas asignadas
-            // Más cuotas = más rápido (reduce más "turnos" o puntos de construcción)
+            // MÃ¡s cuotas = mÃ¡s rÃ¡pido (reduce mÃ¡s "turnos" o puntos de construcciÃ³n)
             c.turnosRestantes -= c.poblacionAsignada;
 
-            logear(`🔨 ${c.nombre}: Progreso ${c.poblacionAsignada} puntos. Restan ${Math.max(0, c.turnosRestantes)}/${c.turnosTotales}`);
+            logear(`ðŸ”¨ ${c.nombre}: Progreso ${c.poblacionAsignada} puntos. Restan ${Math.max(0, c.turnosRestantes)}/${c.turnosTotales}`);
 
             if (c.turnosRestantes <= 0) {
-                // Construcción completada
-                logear(`✅ ¡${c.nombre} completado!`);
+                // ConstrucciÃ³n completada
+                logear(`âœ… Â¡${c.nombre} completado!`);
                 completados.push(c);
 
                 // Agregar al asentamiento
@@ -1013,7 +1017,7 @@ function avanzarConstrucciones(asentamiento) {
                             // Actualizar el grado en el objeto del edificio
                             edificioExistente.grado = (edificioExistente.grado || 1) + 1;
 
-                            // También actualizar en edificiosEstado para sincronizar
+                            // TambiÃ©n actualizar en edificiosEstado para sincronizar
                             if (!estadoSimulacion.edificiosEstado) {
                                 estadoSimulacion.edificiosEstado = {};
                             }
@@ -1022,7 +1026,7 @@ function avanzarConstrucciones(asentamiento) {
                             }
                             estadoSimulacion.edificiosEstado[c.edificioId].grado = edificioExistente.grado;
 
-                            logear(`📈 ${c.nombre} mejorado a Grado ${edificioExistente.grado}`);
+                            logear(`ðŸ“ˆ ${c.nombre} mejorado a Grado ${edificioExistente.grado}`);
                         }
                     } else {
                         // Nuevo edificio
@@ -1040,7 +1044,7 @@ function avanzarConstrucciones(asentamiento) {
                 return false; // Remover de en progreso
             }
         } else {
-            logear(`⏳ ${c.nombre}: Pausado (Sin trabajadores)`);
+            logear(`â³ ${c.nombre}: Pausado (Sin trabajadores)`);
         }
         return true; // Mantener en lista
     });
@@ -1053,12 +1057,12 @@ function avanzarConstrucciones(asentamiento) {
 // =====================================================
 
 /**
- * Registra una transacción comercial
+ * Registra una transacciÃ³n comercial
  * @param {string} recurso - Nombre del recurso
  * @param {number} cantidad - Cantidad intercambiada
  * @param {string} tipo - 'entrada' o 'salida'
  * @param {string} comerciante - Nombre del comerciante (opcional)
- * @param {number} turno - Turno en que ocurrió (opcional, usa turno actual si no se especifica)
+ * @param {number} turno - Turno en que ocurriÃ³ (opcional, usa turno actual si no se especifica)
  */
 function registrarComercio(recurso, cantidad, tipo, comerciante = '', turno = null) {
     estadoSimulacion.historialComercio.push({
@@ -1075,7 +1079,7 @@ function registrarComercio(recurso, cantidad, tipo, comerciante = '', turno = nu
 // =====================================================
 
 // =====================================================
-// FUNCIONES DE EDIFICIOS v3 & SIMULACIÓN
+// FUNCIONES DE EDIFICIOS v3 & SIMULACIÃ“N
 // =====================================================
 
 /**
@@ -1086,14 +1090,14 @@ function calcularCapacidadEdificio(nombreEdificio, grado = 1) {
     const edificio = EDIFICIOS[nombreEdificio];
     if (!edificio) return 0;
 
-    // Lógica V3
+    // LÃ³gica V3
     if (edificio.reqCitizen !== undefined) {
         return edificio.reqCitizen;
     }
     if (edificio.citizenEffect && edificio.citizenEffect.capacidad) {
-        // Si es un efecto global (e.g. Zona Residencial), ¿cuenta como capacidad DE TRABAJO para este edificio?
-        // Zona Residencial aumenta el límite de población GLOBAL, no asigna trabajadores a sí misma (normalmente).
-        // Pero si el usuario puede asignar gente a la Zona Residencial (ej. Mantenimiento?), entonces sí.
+        // Si es un efecto global (e.g. Zona Residencial), Â¿cuenta como capacidad DE TRABAJO para este edificio?
+        // Zona Residencial aumenta el lÃ­mite de poblaciÃ³n GLOBAL, no asigna trabajadores a sÃ­ misma (normalmente).
+        // Pero si el usuario puede asignar gente a la Zona Residencial (ej. Mantenimiento?), entonces sÃ­.
         // Asumiremos que si hay citizenEffect.capacidad, esa es la capacidad.
         return edificio.citizenEffect.capacidad;
     }
@@ -1139,7 +1143,7 @@ function obtenerRecursoEdificio(nombreEdificio, receta = null) {
         if (edificio.produccionTrabajo.tipo === 'Procesado') return "Procesados";
     }
 
-    // Producción Base V3
+    // ProducciÃ³n Base V3
     if (edificio.produccionBase) {
         return Object.keys(edificio.produccionBase)[0];
     }
@@ -1149,8 +1153,8 @@ function obtenerRecursoEdificio(nombreEdificio, receta = null) {
         const mapeo = {
             "Alimento": "Alimento", "Ideas": "Ideas", "Aceros": "Acero",
             "Herramientas": "Herramientas", "Metales/Sal": "Metales",
-            "Pesca": "Pesca", "Soldados": "Soldados", "Guarnición": "Guarnición",
-            "Devoción": "Devoción", "Magia/Arc": "Magia", "Artilugios": "Artilugios"
+            "Pesca": "Pesca", "Soldados": "Soldados", "GuarniciÃ³n": "GuarniciÃ³n",
+            "DevociÃ³n": "DevociÃ³n", "Magia/Arc": "Magia", "Artilugios": "Artilugios"
         };
         return mapeo[edificio.etiqueta] || null;
     }
@@ -1159,8 +1163,8 @@ function obtenerRecursoEdificio(nombreEdificio, receta = null) {
 }
 
 /**
- * Calcula la producción total de todos los edificios
- * Soporta Recetas V3, Producción Base y Modificadores (Agricola, Calidad)
+ * Calcula la producciÃ³n total de todos los edificios
+ * Soporta Recetas V3, ProducciÃ³n Base y Modificadores (Agricola, Calidad)
  */
 function calcularProduccionEdificios(edificiosConstruidos, stats = null) {
     const produccion = {};
@@ -1190,7 +1194,7 @@ function calcularProduccionEdificios(edificiosConstruidos, stats = null) {
         });
     }
 
-    // 2. Calcular producción - Distribución Secuencial
+    // 2. Calcular producciÃ³n - DistribuciÃ³n Secuencial
     edificiosConstruidos.forEach(item => {
         const nombreEdificio = (typeof item === 'string') ? item : item.nombre;
         const instanciaId = (typeof item === 'object') ? item.id : null;
@@ -1209,9 +1213,9 @@ function calcularProduccionEdificios(edificiosConstruidos, stats = null) {
             estado.recetaActual = recetaInstancia;
         }
 
-        // Distribución de Trabajadores:
-        // Prioridad 1: Asignados específicamente a esta ID
-        // Prioridad 2: Asignados genéricamente al Tipo (rellenando huecos)
+        // DistribuciÃ³n de Trabajadores:
+        // Prioridad 1: Asignados especÃ­ficamente a esta ID
+        // Prioridad 2: Asignados genÃ©ricamente al Tipo (rellenando huecos)
         const capacidad = calcularCapacidadEdificio(nombreEdificio, estado.grado || 1);
 
         let asignadosEspecificos = 0;
@@ -1221,7 +1225,7 @@ function calcularProduccionEdificios(edificiosConstruidos, stats = null) {
 
         let asignadosGenericos = 0;
         if (cuotasPorEdificio[nombreEdificio]) {
-            // Tomar del pool genérico lo que quepa
+            // Tomar del pool genÃ©rico lo que quepa
             const hueco = Math.max(0, capacidad - asignadosEspecificos);
             const tomar = Math.min(cuotasPorEdificio[nombreEdificio], hueco);
             asignadosGenericos = tomar;
@@ -1235,8 +1239,8 @@ function calcularProduccionEdificios(edificiosConstruidos, stats = null) {
 
         estado.cuotasAsignadas = cuotasEfectivas;
 
-        // === PRODUCCIÓN PASIVA DE EDIFICIOS ===
-        // Mercado produce 1 Doblón pasivo por existir (sin necesidad de trabajadores)
+        // === PRODUCCIÃ“N PASIVA DE EDIFICIOS ===
+        // Mercado produce 1 DoblÃ³n pasivo por existir (sin necesidad de trabajadores)
         if (nombreEdificio === "Mercado") {
             const pasivo = 1;
             produccion["Doblones"] = produccion["Doblones"] || { total: 0, fuentes: [] };
@@ -1255,16 +1259,16 @@ function calcularProduccionEdificios(edificiosConstruidos, stats = null) {
         let cantidad = 0;
         let receta = null;
 
-        // Modificadores específicos (Cultivo Agrícola)
+        // Modificadores especÃ­ficos (Cultivo AgrÃ­cola)
         let modifier = 0;
-        if (nombreEdificio === "Cultivo Agrícola") {
-            const modAgricola = bonificaciones["Producción Agrícola"] || 0;
+        if (nombreEdificio === "Cultivo AgrÃ­cola") {
+            const modAgricola = bonificaciones["ProducciÃ³n AgrÃ­cola"] || 0;
             const modCalidad = Math.floor(calidad / 5);
             modifier = modAgricola + modCalidad;
         }
 
-        // Determinar Receta o Producción Base
-        // Determinar Receta o Producción Base
+        // Determinar Receta o ProducciÃ³n Base
+        // Determinar Receta o ProducciÃ³n Base
         let recetaKey = recetaInstancia || estado.recetaActual;
         let opcionKey = null;
 
@@ -1299,7 +1303,7 @@ function calcularProduccionEdificios(edificiosConstruidos, stats = null) {
                 outputData = subReceta.output;
             }
 
-            // Producción por Receta (V6: Procesado or Legacy)
+            // ProducciÃ³n por Receta (V6: Procesado or Legacy)
             const qtyPerQuota = (outputData?.Cantidad || 10);
             const outputQty = qtyPerQuota * cuotasEfectivas;
             recurso = outputData?.Recurso || "Procesados";
@@ -1319,7 +1323,7 @@ function calcularProduccionEdificios(edificiosConstruidos, stats = null) {
                 });
             }
         }
-        // V6 Logic: Producción Trabajo
+        // V6 Logic: ProducciÃ³n Trabajo
         else if (edificioDef.produccionTrabajo) {
             const pt = edificioDef.produccionTrabajo;
             // Caso 1: Recurso Directo
@@ -1357,7 +1361,7 @@ function calcularProduccionEdificios(edificiosConstruidos, stats = null) {
         }
 
         if (recurso) {
-            if (modifier !== 0 && recurso === "Alimento" && nombreEdificio === "Cultivo Agrícola") {
+            if (modifier !== 0 && recurso === "Alimento" && nombreEdificio === "Cultivo AgrÃ­cola") {
                 // Apply modifier per effective quota? User said "Modify total produced value by quantity of Crops".
                 // If Modifier is +3, and we have 2 crops.
                 // If we apply +3 per crop -> Total +6. Matches user phrasing.
@@ -1413,3 +1417,4 @@ if (typeof module !== 'undefined' && module.exports) {
         registrarComercio
     };
 }
+

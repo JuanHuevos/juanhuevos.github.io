@@ -1,11 +1,11 @@
-/* =====================================================
-   MÁS ALLÁ DE LO SALVAJE - Estilos Principales
-   Sistema de Gestión de Asentamientos
+﻿/* =====================================================
+   MÃS ALLÃ DE LO SALVAJE - Estilos Principales
+   Sistema de GestiÃ³n de Asentamientos
    ===================================================== */
 
 /* ----- Variables y Tokens ----- */
 :root {
-  /* Paleta de colores - Fantasía Medieval */
+  /* Paleta de colores - FantasÃ­a Medieval */
   --color-primario: #8B4513;
   --color-primario-claro: #A0522D;
   --color-primario-oscuro: #5D2E0C;
@@ -47,7 +47,7 @@
   --transicion-media: 300ms ease;
   --transicion-lenta: 500ms ease;
 
-  /* Tipografía */
+  /* TipografÃ­a */
   --fuente-principal: 'Cinzel', 'Times New Roman', serif;
   --fuente-texto: 'Lora', Georgia, serif;
   --fuente-ui: 'Inter', -apple-system, sans-serif;
@@ -206,7 +206,7 @@ h4 {
   font-size: 0.9rem;
 }
 
-/* ----- Wizard de Creación ----- */
+/* ----- Wizard de CreaciÃ³n ----- */
 .pantalla-crear {
   min-height: 100vh;
   display: flex;
@@ -437,7 +437,7 @@ h4 {
   color: var(--color-acento);
 }
 
-/* ----- Paso: Selección (Propiedades/Peculiaridades) ----- */
+/* ----- Paso: SelecciÃ³n (Propiedades/Peculiaridades) ----- */
 .paso-seleccion h3 {
   text-align: center;
 }
@@ -534,7 +534,7 @@ h4 {
   color: var(--color-texto-secundario);
 }
 
-/* ----- Paso: Confirmación ----- */
+/* ----- Paso: ConfirmaciÃ³n ----- */
 .confirmacion-header {
   text-align: center;
   margin-bottom: 2rem;
@@ -1668,7 +1668,7 @@ h4 {
   background: rgba(0, 0, 0, 0.35);
 }
 
-/* Colores de borde según abundancia */
+/* Colores de borde segÃºn abundancia */
 .recurso-hud.inexistente {
   border-left-color: #4b5563;
   opacity: 0.6;
@@ -1795,7 +1795,7 @@ h4 {
   color: var(--color-texto-secundario);
 }
 
-/* ----- Tabla Final de Recursos (Confirmación) ----- */
+/* ----- Tabla Final de Recursos (ConfirmaciÃ³n) ----- */
 .recursos-seccion {
   overflow-x: auto;
 }
@@ -1909,7 +1909,7 @@ h4 {
   font-style: italic;
 }
 
-/* Botón eliminar recurso manual */
+/* BotÃ³n eliminar recurso manual */
 .btn-eliminar-recurso {
   background: transparent;
   border: none;
@@ -2091,7 +2091,7 @@ h4 {
   color: #000;
 }
 
-/* Exótico descubierto */
+/* ExÃ³tico descubierto */
 .exotico-resultado {
   border-color: #9b59b6;
 }
@@ -2129,7 +2129,7 @@ h4 {
   color: #9b59b6;
 }
 
-/* ----- Confirmación Editable ----- */
+/* ----- ConfirmaciÃ³n Editable ----- */
 .input-nombre-confirmacion {
   width: 100%;
   max-width: 400px;
@@ -2206,7 +2206,7 @@ h4 {
 }
 
 /* =====================================================
-   HUD ESTRUCTURA Y NAVEGACIÓN
+   HUD ESTRUCTURA Y NAVEGACIÃ“N
    ===================================================== */
 .hud-subtitulo {
   display: flex;
@@ -2289,7 +2289,7 @@ h4 {
 }
 
 /* =====================================================
-   VISTA PRODUCCIÓN
+   VISTA PRODUCCIÃ“N
    ===================================================== */
 .panel-full {
   grid-column: 1 / -1;
@@ -2467,7 +2467,7 @@ h4 {
 }
 
 /* =====================================================
-   PASO POBLACIÓN INICIAL
+   PASO POBLACIÃ“N INICIAL
    ===================================================== */
 
 .paso-poblacion {
@@ -2694,7 +2694,7 @@ h4 {
 }
 
 /* =====================================================
-   PANTALLA LISTA DE ASENTAMIENTOS (EXPEDICIÓN)
+   PANTALLA LISTA DE ASENTAMIENTOS (EXPEDICIÃ“N)
    ===================================================== */
 
 .pantalla-lista {
@@ -2800,7 +2800,7 @@ h4 {
   padding: 2rem;
 }
 
-/* Lista vacía */
+/* Lista vacÃ­a */
 .lista-vacia {
   display: flex;
   flex-direction: column;
@@ -3090,7 +3090,7 @@ h4 {
 }
 
 /* =====================================================
-   RESPONSIVE EXPEDICIÓN
+   RESPONSIVE EXPEDICIÃ“N
    ===================================================== */
 
 @media (max-width: 768px) {
@@ -3257,7 +3257,7 @@ h4 {
 
 
 /* =====================================================
-   ESTILOS PARA PESTAÑA DE EDIFICIOS
+   ESTILOS PARA PESTAÃ‘A DE EDIFICIOS
    ===================================================== */
 
 .panel-edificios {
@@ -3619,7 +3619,7 @@ h4 {
   font-style: italic;
 }
 
-/* Producción con fuentes */
+/* ProducciÃ³n con fuentes */
 .seccion-produccion {
   margin-bottom: 1.5rem;
 }
@@ -3658,7 +3658,7 @@ h4 {
   margin-left: 0.3rem;
 }
 
-/* Asignación de cuotas a edificios */
+/* AsignaciÃ³n de cuotas a edificios */
 .edificio-asignacion {
   display: flex;
   align-items: center;
@@ -3684,7 +3684,7 @@ h4 {
   color: rgba(255, 255, 255, 0.6);
 }
 
-/* Economía de Doblones */
+/* EconomÃ­a de Doblones */
 .seccion-doblones {
   background: linear-gradient(135deg, rgba(218, 165, 32, 0.1), rgba(184, 134, 11, 0.1));
   border: 1px solid rgba(255, 215, 0, 0.3);
@@ -3767,7 +3767,7 @@ h4 {
   color: #FF6B6B;
 }
 
-/* Edificios construidos en pestaña */
+/* Edificios construidos en pestaÃ±a */
 .edificios-construidos-panel {
   background: rgba(0, 100, 0, 0.1);
   border: 1px solid rgba(0, 200, 0, 0.3);
@@ -3829,7 +3829,7 @@ h4 {
   font-size: 0.85rem;
 }
 
-/* Sección Edificios Construidos (Activos) */
+/* SecciÃ³n Edificios Construidos (Activos) */
 .seccion-construidos {
   background: rgba(0, 100, 0, 0.15);
   border: 1px solid rgba(74, 222, 128, 0.3);
@@ -4008,7 +4008,7 @@ h4 {
   margin-top: 0.5rem;
 }
 
-/* Botón Construir */
+/* BotÃ³n Construir */
 .btn-construir {
   width: 100%;
   margin-top: 0.75rem;
@@ -4075,7 +4075,7 @@ h4 {
 }
 
 /* =====================================================
-   MODAL DE CONSTRUCCIÓN - Popup de Opciones de Coste
+   MODAL DE CONSTRUCCIÃ“N - Popup de Opciones de Coste
    ===================================================== */
 
 .modal-overlay {
@@ -4391,7 +4391,7 @@ h4 {
   vertical-align: middle;
 }
 
-/* Botones de acci�n mini */
+/* Botones de acción mini */
 .acciones-fila {
   display: flex;
   gap: 0.25rem;
@@ -5309,7 +5309,7 @@ h4 {
 }
 
 /* =====================================================
-   PESTA�A DE COMERCIO
+   PESTAÑA DE COMERCIO
    ===================================================== */
 
 .panel-comercio {
@@ -5499,7 +5499,7 @@ h4 {
     color: #ef4444;
 }
 
-/* Estado vac�o Comercio */
+/* Estado vacío Comercio */
 .comercio-vacio {
     text-align: center;
     padding: 2rem;
@@ -5526,7 +5526,7 @@ h4 {
 }
 
 /* =====================================================
-   PESTA�AS DE EXPEDICI�N
+   PESTAÑAS DE EXPEDICIÓN
    ===================================================== */
 
 .expedicion-tabs {
@@ -6215,3 +6215,961 @@ details[open].panel-tributo .tributo-resumen::before {
     display: flex;
     gap: 0.5rem;
 }
+
+
+/* =========================================
+   PESTAÑA MAPA
+   ========================================= */
+
+.mapa-container {
+    display: flex;
+    gap: 1.5rem;
+    height: calc(100vh - 250px);
+    min-height: 500px;
+}
+
+.mapa-controles {
+    width: 250px;
+    background: rgba(30, 30, 40, 0.5);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+}
+
+.mapa-visor {
+    flex: 1;
+    position: relative;
+    background: #0f0f13;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: crosshair;
+}
+
+.mapa-imagen {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    pointer-events: none; /* Let clicks pass to container */
+}
+
+.mapa-sin-imagen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+    color: #aaa;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+}
+
+/* Marcadores en el mapa */
+.mapa-marcador {
+    position: absolute;
+    transform: translate(-50%, -100%); /* Bottom-center anchor */
+    cursor: pointer;
+    z-index: 10;
+    text-align: center;
+    transition: transform 0.2s;
+}
+
+.mapa-marcador:hover {
+    transform: translate(-50%, -100%) scale(1.2);
+    z-index: 20;
+}
+
+.mapa-marcador-icono {
+    font-size: 2rem;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    display: block;
+}
+
+.mapa-marcador-nombre {
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    margin-top: -5px;
+    display: block;
+}
+
+/* Conexiones SVG */
+.mapa-conexiones {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* Lista lateral */
+.mapa-lista-asentamientos {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 1rem;
+}
+
+.mapa-asentamiento-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.mapa-asentamiento-item.posicionado {
+    border-left: 3px solid #10b981; /* Green */
+}
+
+.mapa-asentamiento-item.seleccionado {
+    background: rgba(255, 200, 100, 0.2);
+    border: 1px solid rgba(255, 200, 100, 0.5);
+}
+
+.mapa-instruccion {
+    position: absolute;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.8);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    color: #fbbf24;
+    font-weight: bold;
+    pointer-events: none;
+    animation: fadeInOut 2s infinite;
+}
+
+@keyframes fadeInOut {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+/* ESTILOS DEL GESTOR DE PARTIDAS */
+.pantalla-gestor {
+    width: 100%;
+    max-width: 900px;
+    margin: 2rem auto;
+    padding: 2.5rem;
+    background: linear-gradient(135deg, rgba(20, 20, 35, 0.98), rgba(10, 10, 20, 0.98));
+    border-radius: 16px;
+    border: 1px solid rgba(255, 215, 0, 0.15);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+    color: #e0e0e0;
+    backdrop-filter: blur(10px);
+}
+
+.header-gestor {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 1.5rem;
+}
+
+.header-gestor h2 {
+    margin: 0;
+    color: #ffd700;
+    font-size: 2rem;
+    font-family: 'Cinzel', serif;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    flex-grow: 1;
+}
+
+.contenedor-saves {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    max-height: 65vh;
+    overflow-y: auto;
+    padding-right: 0.8rem;
+}
+
+/* Scrollbar personalizada para el gestor */
+.contenedor-saves::-webkit-scrollbar {
+    width: 8px;
+}
+.contenedor-saves::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 4px;
+}
+.contenedor-saves::-webkit-scrollbar-thumb {
+    background: rgba(255, 215, 0, 0.2);
+    border-radius: 4px;
+}
+.contenedor-saves::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 215, 0, 0.4);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem;
+    color: #888;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+    font-style: italic;
+}
+
+.save-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01));
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    flex-wrap: wrap; /* Permitir wrap en pantallas pequeñas */
+    gap: 1rem;
+}
+
+.save-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: rgba(255, 215, 0, 0.3);
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.save-card:hover {
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border-color: rgba(255, 215, 0, 0.3);
+}
+
+.save-card:hover::before {
+    opacity: 1;
+}
+
+/* Estilo específico para el autoguardado */
+.save-card.autosave-card {
+    background: linear-gradient(to right, rgba(79, 70, 229, 0.15), rgba(79, 70, 229, 0.05)) !important;
+    border: 1px solid rgba(79, 70, 229, 0.3) !important;
+    border-left: 4px solid #4f46e5 !important;
+}
+
+.save-card.autosave-card:hover {
+    background: linear-gradient(to right, rgba(79, 70, 229, 0.2), rgba(79, 70, 229, 0.1)) !important;
+    box-shadow: 0 4px 15px rgba(79, 70, 229, 0.25);
+}
+
+.save-info {
+    flex-grow: 1;
+    min-width: 200px;
+}
+
+.save-info h3 {
+    margin: 0 0 0.75rem 0;
+    color: #fce7cf; 
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+
+.save-meta {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.9rem;
+    color: #a0a0b0;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.save-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap; /* Evitar que el texto de los metadatos se corte */
+}
+
+.save-actions {
+    display: flex;
+    gap: 0.8rem;
+    padding-left: 1.5rem;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    margin-left: 0; /* Ajuste para responsividad */
+    flex-shrink: 0; /* Evitar que se aplasten */
+}
+
+@media (max-width: 768px) {
+    .save-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .save-actions {
+        border-left: none;
+        padding-left: 0;
+        margin-top: 1rem;
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+.btn-accion {
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    white-space: nowrap; /* CRITICAL: Evitar que el texto flote fuera */
+    min-width: fit-content;
+}
+
+.btn-accion:active {
+    transform: scale(0.95);
+}
+
+.btn-accion.primario {
+    background: linear-gradient(to bottom, #ffd700, #daa520);
+    color: #1a1a2e;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.btn-accion.primario:hover {
+    background: linear-gradient(to bottom, #ffe033, #e5b026);
+    box-shadow: 0 4px 8px rgba(255, 215, 0, 0.3);
+}
+
+.btn-accion.peligro {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    padding: 0.6rem; 
+}
+
+.btn-accion.peligro:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #ff6b6b;
+    border-color: #ef4444;
+}
+
+.footer-gestor {
+    margin-top: 2.5rem;
+    display: flex;
+    justify-content: flex-end; 
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 1.5rem;
+}
+
+.btn-volver {
+    background: transparent;
+    border: 1px solid rgba(255, 215, 0, 0.4);
+    color: #ffd700;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.btn-volver:hover {
+    background: rgba(255, 215, 0, 0.15);
+    border-color: #ffd700;
+}
+
+/* Save Button in HUD */
+.btn-guardar-hud {
+    background: linear-gradient(to bottom, #4f46e5, #4338ca);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1.4rem;
+    margin-right: 0.8rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    flex-shrink: 0; /* Prevenir aplastamiento */
+}
+
+.btn-guardar-hud:hover {
+    background: linear-gradient(to bottom, #6366f1, #4f46e5);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(79, 70, 229, 0.4);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* =====================================================
+   ESTILOS DE PESTAÑA MAPA
+   ===================================================== */
+.mapa-subida-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+    border: 2px dashed rgba(255,255,255,0.1);
+    text-align: center;
+    margin: 2rem auto;
+    max-width: 600px;
+}
+
+.mapa-icono-grande {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 0 10px rgba(255,215,0,0.3));
+}
+
+.zona-drop {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: rgba(255,255,255,0.05);
+    border: 2px dashed rgba(255,215,0,0.4);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.zona-drop:hover {
+    background: rgba(255,215,0,0.1);
+    border-color: #ffd700;
+}
+
+.mapa-notas {
+    margin-top: 1rem;
+    color: #888;
+}
+
+/* Visor de Mapa */
+.visor-mapa-container {
+    display: grid;
+    grid-template-columns: 1fr 250px;
+    gap: 1rem;
+    height: calc(100vh - 200px);
+    width: 100%;
+}
+
+.mapa-toolbar {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+}
+
+.instruccion-mapa {
+    color: #ffd700;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.mapa-viewport {
+    position: relative;
+    background: #0f172a;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    overflow: hidden; /* Scroll interno si es necesario */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mapa-lienzo {
+    position: relative;
+    max-width: 100%;
+    max-height: 100%;
+    /* Permitir drag/pan sería ideal, por ahora estático/scroll */
+}
+
+.mapa-bg {
+    display: block;
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+}
+
+.mapa-overlay-hex {
+    /* Estilos base por si falla el inline */
+    z-index: 10;
+}
+
+.mapa-pines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* Dejar pasar clics al hex overlay */
+    z-index: 20;
+}
+
+.mapa-pin {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+    width: auto;
+    pointer-events: none; /* No bloquear grid */
+}
+
+.pin-icono {
+    font-size: 1.8rem;
+    background: rgba(0,0,0,0.5);
+    border-radius: 50%;
+    padding: 2px;
+    border: 1px solid rgba(255,255,255,0.5);
+    transition: transform 0.2s;
+}
+
+.pin-label {
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    margin-top: 2px;
+    white-space: nowrap;
+    opacity: 0.8;
+}
+
+.panel-lateral-mapa {
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.lista-sin-ubicar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.item-sin-ubicar {
+    padding: 0.5rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+}
+
+.item-sin-ubicar:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.item-sin-ubicar.seleccionado {
+    border-color: #ffd700;
+    background: rgba(255, 215, 0, 0.1);
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+}
+
+
+/* =====================================================
+   ESTILOS DE PESTAÑA MAPA (MEJORADOS)
+   ===================================================== */
+.mapa-subida-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    background: rgba(0,0,0,0.2);
+    border-radius: 12px;
+    border: 2px dashed rgba(255,255,255,0.1);
+    text-align: center;
+    margin: 2rem auto;
+    max-width: 600px;
+}
+
+.mapa-icono-grande {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 0 10px rgba(255,215,0,0.3));
+}
+
+.zona-drop {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: rgba(255,255,255,0.05);
+    border: 2px dashed rgba(255,215,0,0.4);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.zona-drop:hover {
+    background: rgba(255,215,0,0.1);
+    border-color: #ffd700;
+}
+
+.mapa-notas {
+    margin-top: 1rem;
+    color: #888;
+}
+
+/* Visor de Mapa con Grid Layout */
+.visor-mapa-container {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+    height: calc(100vh - 180px);
+    width: 100%;
+}
+
+.mapa-toolbar {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.instruccion-mapa {
+    color: #ffd700;
+    font-weight: bold;
+    font-size: 0.9rem;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* Layout del Viewport con Reglas */
+.mapa-layout-grid {
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    grid-template-rows: 30px 1fr;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #0f172a;
+}
+
+.mapa-ruler-corner {
+    background: #1e293b;
+    border-bottom: 1px solid #334155;
+    border-right: 1px solid #334155;
+}
+
+.mapa-ruler-top {
+    background: #1e293b;
+    border-bottom: 1px solid #334155;
+    display: flex; /* Would need JS to populate letters, or pseudo elements? Using static BG for now or JS logic later */
+}
+
+.mapa-ruler-left {
+    background: #1e293b;
+    border-right: 1px solid #334155;
+}
+
+.mapa-viewport {
+    position: relative;
+    background: #0f172a;
+    overflow: hidden; /* Scroll interno si es necesario */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.mapa-lienzo {
+    position: relative;
+    max-width: 100%;
+    max-height: 100%;
+}
+
+.mapa-bg {
+    display: block;
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+}
+
+.mapa-pines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; 
+    z-index: 25; /* Above FoW */
+}
+
+.mapa-pin {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+    width: auto;
+    pointer-events: none; 
+}
+
+.pin-icono {
+    font-size: 1.8rem;
+    background: rgba(30,30,40,0.8);
+    border-radius: 50%;
+    padding: 2px;
+    border: 2px solid #ffd700;
+    transition: transform 0.2s;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+}
+
+.pin-label {
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    margin-top: 2px;
+    white-space: nowrap;
+    opacity: 0.9;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.panel-lateral-mapa {
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 1rem;
+    overflow-y: auto;
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.info-hex-hover {
+    background: rgba(0,0,0,0.4);
+    padding: 0.5rem;
+    border-radius: 4px;
+    text-align: center;
+    font-family: monospace;
+    color: #4ade80;
+    margin-bottom: 1rem;
+    border: 1px solid rgba(74, 222, 128, 0.2);
+}
+
+.lista-sin-ubicar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.item-sin-ubicar {
+    padding: 0.5rem;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 4px;
+    transition: all 0.2s;
+    font-size: 0.9rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.item-header {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.item-sin-ubicar:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.item-sin-ubicar.seleccionado {
+    border-color: #ffd700;
+    background: rgba(255, 215, 0, 0.05);
+    box-shadow: 0 0 5px rgba(255, 215, 0, 0.1) inset;
+}
+
+.manual-coord-input {
+    display: flex; 
+    margin-top: 8px; 
+    gap: 5px;
+    padding-top: 5px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.input-coord-mini {
+    width: 60px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: white;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+}
+
+
+/* Estilos de Modo Admin */
+.mapa-pin.admin-mode {
+    cursor: move;
+    pointer-events: auto !important; /* Permitir clicar en el pin */
+    z-index: 100;
+}
+
+.mapa-pin.admin-mode:hover .pin-icono {
+    border-color: #ef4444;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
+    transform: scale(1.2);
+}
+
+.btn-peligro {
+    background: linear-gradient(135deg, #ef4444, #b91c1c);
+    border: 1px solid #991b1b;
+}
+
+.btn-peligro:hover {
+    background: linear-gradient(135deg, #f87171, #dc2626);
+}
+
+/* =====================================================
+   ESTILOS MAPA Y VISOR
+   ===================================================== */
+.visor-mapa-container {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    grid-template-rows: auto 1fr;
+    gap: 1rem;
+    height: calc(100vh - 180px); /* Ajuste para header + nav */
+    width: 100%;
+    overflow: hidden;
+    padding: 0.5rem;
+    box-sizing: border-box;
+}
+
+.mapa-toolbar {
+    grid-column: 1 / -1; 
+    grid-row: 1;
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    z-index: 50;
+}
+
+.mapa-layout-grid {
+    grid-column: 1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    grid-template-rows: 30px 1fr;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #0f172a;
+    position: relative;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+}
+
+.mapa-ruler-corner { grid-column: 1; grid-row: 1; background: #1e293b; border-bottom: 1px solid rgba(255,255,255,0.1); border-right: 1px solid rgba(255,255,255,0.1); }
+.mapa-ruler-top { grid-column: 2; grid-row: 1; background: #1e293b; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.mapa-ruler-left { grid-column: 1; grid-row: 2; background: #1e293b; border-right: 1px solid rgba(255,255,255,0.1); }
+
+/* CENTERING FIX: Make viewport full size of grid cell */
+.mapa-viewport {
+    grid-column: 2;
+    grid-row: 2;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center; /* Centers the canvas/image */
+    overflow: auto;
+    background: #0f172a;
+    position: relative;
+}
+
+.mapa-lienzo {
+    position: relative;
+    /* Dimensions determined by content (image) */
+    box-shadow: 0 0 30px rgba(0,0,0,0.5);
+}
+
+.panel-lateral-mapa {
+    grid-column: 2;
+    grid-row: 2;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 1rem;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.panel-lateral-mapa h4 {
+    color: #ffd700;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 0.5rem;
+}
+
+.item-sin-ubicar {
+    background: rgba(255,255,255,0.05);
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.item-sin-ubicar:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+    transform: translateX(2px);
+}
+
+.info-hex-hover {
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #34d399;
+    padding: 0.5rem;
+    border-radius: 4px;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+

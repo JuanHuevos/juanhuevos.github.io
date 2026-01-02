@@ -345,7 +345,7 @@ const BIOMAS_ESPECIALES = {
         exoticosGarantizados: ["Fuente de Energía Salvaje"],
         peculiaridadFija: null,
         dadoPeculiaridades: "2d6",
-        influenciaMagica: "Alta",
+        influenciaMagica: "Media",
         descripcion: "Zonas de inestabilidad mágica"
     },
     "Tierras Consagradas": {

@@ -109,6 +109,10 @@ function importarExpedicion(data) {
         }
 
         guardarExpedicion();
+
+        // Auto-guardar en repositorio para que persista como slot
+        guardarEnRepositorio(estadoApp.expedicion.nombre || "Importado", `import_${Date.now()}`);
+
         return true;
     } catch (e) {
         console.error("Error al importar:", e);
@@ -311,6 +315,135 @@ function calcularMantenimientoEdificios(edificiosConstruidos, globalMaintenanceM
 
 const STORAGE_KEY = 'mas_alla_salvaje_data';
 const EXPEDICION_KEY = 'mas_alla_salvaje_expedicion';
+const REPO_INDEX_KEY = 'mas_alla_salvaje_save_index';
+const REPO_PREFIX = 'mas_alla_salvaje_save_';
+
+// =====================================================
+// REPOSITORIO DE GUARDADOS
+// =====================================================
+
+/**
+ * Obtiene la lista de partidas guardadas
+ */
+function obtenerRepositorio() {
+    try {
+        const indexJSON = localStorage.getItem(REPO_INDEX_KEY);
+        return indexJSON ? JSON.parse(indexJSON) : [];
+    } catch (e) {
+        console.error('Error al leer índice de repositorio:', e);
+        return [];
+    }
+}
+
+/**
+ * Guarda la expedición actual en el repositorio como un nuevo slot o sobrescribiendo
+ * @param {string} nombre - Nombre para el guardado (opcional, usa nombre expedición si no)
+ * @param {string} idExistente - ID si se sobrescribe (opcional)
+ */
+function guardarEnRepositorio(nombre, idExistente = null) {
+    if (!estadoApp.expedicion) {
+        console.error('No hay expedición para guardar');
+        return false;
+    }
+
+    try {
+        const repo = obtenerRepositorio();
+        const ahora = new Date().toISOString();
+        const saveId = idExistente || `save_${Date.now()}`;
+
+        // Datos a guardar
+        const saveData = JSON.parse(JSON.stringify(estadoApp.expedicion)); // Copia profunda
+        // Asegurar que state de simulación actual del asentamiento activo esté actualizado en la expedición
+        if (estadoApp.asentamientoActual) {
+            const asoc = saveData.asentamientos.find(a => a.id === estadoApp.asentamientoActual.id);
+            if (asoc) {
+                // Guardar estado simulación actual en el objeto a guardar
+                asoc.simulacion = obtenerResumenEstado(); // Helper de simulation.js
+            }
+        }
+
+        // 1. Guardar la data completa
+        localStorage.setItem(REPO_PREFIX + saveId, JSON.stringify(saveData));
+
+        // 2. Actualizar índice
+        const nombreFinal = nombre || estadoApp.expedicion.nombre || "Expedición Sin Nombre";
+        const resumen = {
+            id: saveId,
+            nombre: nombreFinal,
+            fecha: ahora,
+            asentamientos: saveData.asentamientos.length,
+            poblacionTotal: saveData.asentamientos.reduce((acc, a) => acc + (a.poblacion ? a.poblacion.length : 0), 0),
+            turno: (estadoSimulacion ? estadoSimulacion.turno : 0) // Intenta sacar turno actual
+        };
+
+        const idx = repo.findIndex(r => r.id === saveId);
+        if (idx >= 0) {
+            repo[idx] = resumen;
+        } else {
+            repo.push(resumen);
+        }
+
+        localStorage.setItem(REPO_INDEX_KEY, JSON.stringify(repo));
+
+        console.log(`Guardado exitoso en slot: ${saveId}`);
+        mostrarNotificacion(`✅ Partida guardada: ${nombreFinal}`);
+        return true;
+
+    } catch (e) {
+        console.error('Error al guardar en repositorio:', e);
+        mostrarNotificacion('❌ Error al guardar partida', 'error');
+        return false;
+    }
+}
+
+/**
+ * Carga una partida desde el repositorio
+ */
+function cargarDesdeRepositorio(saveId) {
+    try {
+        const dataJSON = localStorage.getItem(REPO_PREFIX + saveId);
+        if (!dataJSON) {
+            throw new Error("Archivo de guardado no encontrado");
+        }
+
+        const data = JSON.parse(dataJSON);
+
+        // Importar como expedición activa
+        if (importarExpedicion({ expedicion: data })) {
+            console.log(`Cargado exitoso desde slot: ${saveId}`);
+            mostrarNotificacion(`📂 Partida cargada correctamente`);
+            return true;
+        }
+        return false;
+
+    } catch (e) {
+        console.error('Error al cargar desde repositorio:', e);
+        mostrarNotificacion('❌ Error al cargar partida', 'error');
+        return false;
+    }
+}
+
+/**
+ * Elimina una partida del repositorio
+ */
+function eliminarDeRepositorio(saveId) {
+    try {
+        // 1. Eliminar data
+        localStorage.removeItem(REPO_PREFIX + saveId);
+
+        // 2. Actualizar índice
+        let repo = obtenerRepositorio();
+        repo = repo.filter(r => r.id !== saveId);
+        localStorage.setItem(REPO_INDEX_KEY, JSON.stringify(repo));
+
+        console.log(`Eliminado slot: ${saveId}`);
+        return true;
+
+    } catch (e) {
+        console.error('Error al eliminar:', e);
+        return false;
+    }
+}
 
 /**
  * Crea una nueva expedición

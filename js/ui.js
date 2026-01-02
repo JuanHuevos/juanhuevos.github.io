@@ -340,6 +340,10 @@ function renderizarListaAsentamientos(container) {
       
       <!-- Pestañas de Expedición -->
       <nav class="expedicion-tabs">
+        <button class="expedicion-tab ${pestanaActiva === 'mapa' ? 'activa' : ''}" 
+                onclick="cambiarPestanaExpedicion('mapa')">
+          🗺️ Mundo
+        </button>
         <button class="expedicion-tab ${pestanaActiva === 'asentamientos' ? 'activa' : ''}" 
                 onclick="cambiarPestanaExpedicion('asentamientos')">
           🏘️ Asentamientos
@@ -351,7 +355,8 @@ function renderizarListaAsentamientos(container) {
       </nav>
       
       <main class="lista-contenido">
-        ${pestanaActiva === 'asentamientos' ? renderizarPestanaAsentamientos(asentamientos) : renderizarPestanaConexiones(asentamientos)}
+        ${pestanaActiva === 'mapa' ? renderizarVisorMapa(expedicion) :
+      (pestanaActiva === 'asentamientos' ? renderizarPestanaAsentamientos(asentamientos) : renderizarPestanaConexiones(asentamientos))}
       </main>
     </div>
   `;
@@ -578,6 +583,7 @@ function renderizarCardAsentamiento(asentamiento) {
         <button class="btn-gestionar" onclick="event.stopPropagation(); gestionarAsentamiento(${asentamiento.id})">
           Gestionar →
         </button>
+        <button class="btn-exportar-card" onclick="event.stopPropagation(); exportarAsentamientoIndividual(${asentamiento.id})" title="Exportar asentamiento">📤</button>
         <button class="btn-eliminar-card" onclick="event.stopPropagation(); confirmarEliminarAsentamiento(${asentamiento.id})" title="Eliminar asentamiento">
           🗑️
         </button>
@@ -3497,6 +3503,7 @@ function renderizarTablaPoblacionEditable() {
     <thead><tr style="border-bottom:2px solid rgba(255,255,255,0.2);">
       <th style="text-align:left; padding:0.5rem;">ID</th>
       <th style="text-align:left; padding:0.5rem;">Naturaleza</th>
+      <th style="text-align:left; padding:0.5rem;">Subtipo</th>
       <th style="text-align:left; padding:0.5rem;">Rol</th>
       <th style="text-align:left; padding:0.5rem;">Estado</th>
       <th style="text-align:center; padding:0.5rem;">⚙️</th>
@@ -3536,6 +3543,20 @@ function renderizarTablaPoblacionEditable() {
                 style="padding:0.25rem; border-radius:4px; background:#333; color:#fff; border:1px solid #555; font-size:0.8rem;">
           ${naturalezaOptions}
         </select>
+      </td>
+      <td style="padding:0.4rem;">
+        ${p.naturaleza === "Artificial" ? `
+          <select onchange="cambiarSubtipoPoblacion(${p.id}, this.value)" style="padding:0.25rem; border-radius:4px; background:#333; color:#fff; border:1px solid #555; font-size:0.8rem;">
+            ${["Neutral", "Positiva", "Negativa", "Monstruo"].map(s => `<option value="${s}" ${(p.subtipo || "Neutral") === s ? "selected" : ""}>${iconosTipo[s]} ${s}</option>`).join("")}
+          </select>
+        ` : `<span style="opacity:0.4;">-</span>`}
+      </td>
+      <td style="padding:0.4rem;">
+        ${p.naturaleza === "Artificial" ? `
+          <select onchange="cambiarSubtipoPoblacion(${p.id}, this.value)" style="padding:0.25rem; border-radius:4px; background:#333; color:#fff; border:1px solid #555; font-size:0.8rem;">
+            ${["Neutral", "Positiva", "Negativa", "Monstruo"].map(s => `<option value="${s}" ${(p.subtipo || "Neutral") === s ? "selected" : ""}>${iconosTipo[s]} ${s}</option>`).join("")}
+          </select>
+        ` : `<span style="opacity:0.4;">-</span>`}
       </td>
       <td style="padding:0.4rem;">
         <select onchange="cambiarRolPoblacion(${p.id}, this.value)" 
@@ -3790,7 +3811,9 @@ function renderizarPestanaBioma(a, stats) {
   // Tables Logic (Simplified Reuse)
   // ... Copied mostly from original PestanaProduccion ...
   const totalCuotas = estadoSimulacion.poblacion ? estadoSimulacion.poblacion.length : 0;
-  const consumoAlimentos = totalCuotas;
+  const countArtificiales = estadoSimulacion.poblacion ? estadoSimulacion.poblacion.filter(p => p.naturaleza === "Artificial").length : 0;
+  const costoPoblacionDoblones = countArtificiales;
+  const consumoAlimentos = totalCuotas - countArtificiales; // Artificiales no consumen alimento
   const pBioma = produccionBioma["Alimento"]?.medidas || 0;
   const pEdif = produccionEdificios["Alimento"]?.total || 0;
   const bal = (pBioma + pEdif) - consumoAlimentos;
@@ -4046,7 +4069,9 @@ function renderizarSubPestanaBalance(a, stats) {
   const produccionEdificios = calcularProduccionEdificios(a.edificios || [], stats);
 
   const totalCuotas = estadoSimulacion.poblacion ? estadoSimulacion.poblacion.length : 0;
-  const consumoAlimentos = totalCuotas;
+  const countArtificiales = estadoSimulacion.poblacion ? estadoSimulacion.poblacion.filter(p => p.naturaleza === "Artificial").length : 0;
+  const costoPoblacionDoblones = countArtificiales;
+  const consumoAlimentos = totalCuotas - countArtificiales; // Artificiales no consumen alimento
 
   // Calcular produccion total de alimentos (sumando todos los tipos)
   let produccionAlimentosTotal = 0;
@@ -4148,7 +4173,7 @@ function renderizarSubPestanaBalance(a, stats) {
   // Mantenimiento - usar el valor precalculado que aplica modificadores correctamente
   const gastoMantenimiento = stats.mantenimientoEdificios || 0;
 
-  const balanceDoblones = ingresosTributo + ingresosEdificios - gastoMantenimiento;
+  const balanceDoblones = ingresosTributo + ingresosEdificios - gastoMantenimiento - costoPoblacionDoblones;
 
   // Recopilar todos los recursos con producción
   const recursosConProduccion = new Set();
@@ -4207,6 +4232,7 @@ function renderizarSubPestanaBalance(a, stats) {
                     <span>Tributos: <strong>+${ingresosTributo}</strong></span>
                     ${ingresosEdificios > 0 ? `<span>Edificios: <strong>+${ingresosEdificios}</strong></span>` : ''}
                     <span>Mantenimiento: <strong>-${gastoMantenimiento}</strong></span>
+                    ${costoPoblacionDoblones > 0 ? `<span>🤖 Población Artificial: <strong>-${costoPoblacionDoblones}</strong></span>` : ""}
                 </div>
             </div>
             <div class="balance-destacado-neto">
@@ -6508,4 +6534,900 @@ function invocarMilagro(tipoDevocion, nombreMilagro) {
   console.log(`✨ Milagro: ${nombreMilagro} (${tipoDevocion}) - Coste: ${costeAjustado}, Efecto: ${milagro.efecto}`);
 }
 
+
+
+// =====================================================
+// FUNCIONES RESTAURADAS Y NUEVAS
+// =====================================================
+
+// === INDIVIDUAL SETTLEMENT EXPORT ===
+function exportarAsentamientoIndividual(id) {
+  const asentamiento = estadoApp.expedicion.asentamientos.find(function (a) { return a.id === id; });
+  if (!asentamiento) {
+    alert("Asentamiento no encontrado");
+    return;
+  }
+
+  const data = {
+    asentamientos: [asentamiento],
+    exportedAt: new Date().toISOString(),
+    expedicionNombre: estadoApp.expedicion.nombre
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'asentamiento_' + asentamiento.nombre.replace(/[^a-zA-Z0-9]/g, '_') + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  mostrarNotificacion("📤 " + asentamiento.nombre + " exportado", "exito");
+}
+
+// === REGION VISUALIZATION (BORDER ONLY) ===
+function dibujarRegion() {
+  const canvas = document.getElementById('region-canvas');
+  if (!canvas) return;
+
+  const mapa = estadoApp.expedicion.mapa;
+  const asentamientos = estadoApp.expedicion.asentamientos || [];
+  const hexSize = mapa.config.hexSize;
+  const offsetX = mapa.config.offsetX || 0;
+  const offsetY = mapa.config.offsetY || 0;
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Find the first/primary settlement
+  const primerAsentamiento = asentamientos.find(function (a) { return a.esPrimerAsentamiento; });
+  if (!primerAsentamiento) return;
+
+  const ubicacion = mapa.ubicaciones[primerAsentamiento.id];
+  if (!ubicacion) return;
+
+  const REGION_RADIUS = 6; // Hexes radius for the region
+  const centerQ = ubicacion.q;
+  const centerR = ubicacion.r;
+
+  // Collect all hexes at the boundary (distance = REGION_RADIUS)
+  ctx.strokeStyle = 'rgba(220, 38, 38, 0.8)'; // Red border
+  ctx.lineWidth = 3;
+  ctx.setLineDash([]);
+
+  ctx.beginPath();
+  for (let dq = -REGION_RADIUS; dq <= REGION_RADIUS; dq++) {
+    for (let dr = Math.max(-REGION_RADIUS, -dq - REGION_RADIUS); dr <= Math.min(REGION_RADIUS, -dq + REGION_RADIUS); dr++) {
+      const dist = (Math.abs(dq) + Math.abs(dr) + Math.abs(-dq - dr)) / 2;
+
+      // Only draw hexes AT the boundary
+      if (dist !== REGION_RADIUS) continue;
+
+      const q = centerQ + dq;
+      const r = centerR + dr;
+
+      // POINTY-TOP center formula
+      const hexX = hexSize * Math.sqrt(3) * (q + r / 2) + offsetX;
+      const hexY = hexSize * 1.5 * r + offsetY;
+
+      // Draw hex border
+      for (let i = 0; i < 6; i++) {
+        const angle_deg = 60 * i + 30;
+        const angle_rad = Math.PI / 180 * angle_deg;
+        const px = hexX + hexSize * Math.cos(angle_rad);
+        const py = hexY + hexSize * Math.sin(angle_rad);
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+    }
+  }
+  ctx.stroke();
+}
+
+// === ADMIN PIN CLICK (RELOCATION) ===
+function clickPinMapa(id, event) {
+  event.stopPropagation();
+
+  if (!estadoApp.mapaAdmin) {
+    // Normal mode - just show info or open settlement
+    gestionarAsentamiento(id);
+    return;
+  }
+
+  // Admin mode - allow relocation
+  const asentamiento = estadoApp.expedicion.asentamientos.find(function (a) { return a.id === id; });
+  if (!asentamiento) return;
+
+  if (confirm("¿Reubicar " + asentamiento.nombre + "? Haz clic en la nueva posición.")) {
+    asentamientoSeleccionadoId = id;
+    mostrarNotificacion("📍 Haz clic en el mapa para reubicar " + asentamiento.nombre);
+  }
+}
+
+// === EDIT ARTIFICIAL SUBTYPE (HUD) ===
+function cambiarSubtipoPoblacion(id, nuevoSubtipo) {
+  const cuota = estadoSimulacion.poblacion.find(function (p) { return p.id === id; });
+  if (cuota) {
+    cuota.subtipo = nuevoSubtipo;
+    guardarExpedicion();
+    actualizarHUD();
+    mostrarNotificacion("🤖 Subtipo actualizado a " + nuevoSubtipo);
+  }
+}
+
+
+
+
+
+// =====================================================
+// VISOR DE MAPA - RENDERIZADO COMPLETO
+// =====================================================
+
+function renderizarVisorMapa(expedicion) {
+  const mapa = expedicion?.mapa;
+  const asentamientos = expedicion?.asentamientos || [];
+  const isAdmin = estadoApp.mapaAdmin || false;
+
+  if (!mapa || !mapa.imagen) {
+    return `
+      <div class="mapa-vacio">
+        <p>🗺️ No hay mapa configurado para esta expedición.</p>
+        <p>Usa el modo Admin para cargar una imagen de mapa.</p>
+        ${isAdmin ? `
+          <label class="btn-cargar-mapa">
+            📁 Cargar Imagen de Mapa
+            <input type="file" accept="image/*" onchange="cargarImagenMapa(event)" style="display:none;">
+          </label>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  const config = mapa.config || { hexSize: 30, offsetX: 0, offsetY: 0, mostrarGrid: true, mostrarFow: true };
+
+  // Generate settlement pins HTML
+  const pinsHTML = asentamientos.map(a => {
+    const ubicacion = mapa.ubicaciones?.[a.id];
+    if (!ubicacion) return '';
+
+    const q = ubicacion.q;
+    const r = ubicacion.r;
+    // POINTY-TOP formula
+    const x = config.hexSize * Math.sqrt(3) * (q + r / 2) + (config.offsetX || 0);
+    const y = config.hexSize * 1.5 * r + (config.offsetY || 0);
+
+    const gradoData = typeof GRADOS !== 'undefined' ? GRADOS[a.grado] : null;
+    const icono = gradoData?.icono || '🏕️';
+
+    // Pin size scales with hexSize (roughly 1.2x hex dimension)
+    const pinSize = Math.max(24, Math.round(config.hexSize * 1.2));
+    const fontSize = Math.max(12, Math.round(config.hexSize * 0.6));
+
+    // Show custom image if available, otherwise show icon
+    const contenidoVisual = a.imagenPersonalizada
+      ? `<img src="${a.imagenPersonalizada}" class="pin-imagen" style="width:${pinSize}px; height:${pinSize}px;" alt="${a.nombre}">`
+      : `<span class="pin-icono" style="font-size:${fontSize}px;">${icono}</span>`;
+
+    return `
+      <div class="mapa-pin" 
+           style="left: ${x}px; top: ${y}px; transform: translate(-50%, -50%);"
+           onclick="clickPinMapa(${a.id}, event)"
+           title="${a.nombre}">
+        ${contenidoVisual}
+        <span class="pin-label">${a.nombre}</span>
+      </div>
+    `;
+  }).join('');
+
+  // Generate markers HTML
+  const marcadores = mapa.marcadores || [];
+  const marcadoresHTML = marcadores.map((m, idx) => {
+    const q = m.q;
+    const r = m.r;
+    const x = config.hexSize * Math.sqrt(3) * (q + r / 2) + (config.offsetX || 0);
+    const y = config.hexSize * 1.5 * r + (config.offsetY || 0);
+
+    return `
+      <div class="mapa-marcador" 
+           style="left: ${x}px; top: ${y}px; transform: translate(-50%, -50%); color: ${m.color || '#fff'};"
+           title="${m.texto || 'Marcador'}">
+        ${m.icono || '📍'}
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="visor-mapa-container">
+      <div class="mapa-toolbar">
+        <div class="toolbar-grupo">
+          <label class="toolbar-check">
+            <input type="checkbox" ${config.mostrarGrid ? 'checked' : ''} onchange="toggleGridMapa(this.checked)">
+            🔲 Grid
+          </label>
+          ${isAdmin ? `
+            <label class="toolbar-check">
+              <input type="checkbox" ${config.mostrarFow ? 'checked' : ''} onchange="toggleFowMapa(this.checked)">
+              🌫️ Niebla
+            </label>
+          ` : ''}
+        </div>
+        
+        ${isAdmin ? `
+          <div class="toolbar-grupo admin-controls">
+            <button onclick="toggleAdminMapa()" class="btn-admin activo">🔧 Admin</button>
+            <label class="btn-toolbar">
+              📁 Cargar Mapa
+              <input type="file" accept="image/*" onchange="cargarImagenMapa(event)" style="display:none;">
+            </label>
+            <button onclick="exportarMapaCompleto()" class="btn-toolbar">📤 Exportar</button>
+            <label class="btn-toolbar">
+              📥 Importar
+              <input type="file" accept=".json" onchange="importarMapaCompleto(event)" style="display:none;">
+            </label>
+          </div>
+        ` : `
+          <button onclick="toggleAdminMapa()" class="btn-admin">🔧 Admin</button>
+        `}
+      </div>
+      
+      <div class="mapa-config-bar" ${isAdmin ? '' : 'style="display:none;"'}>
+        <label>Hex Size: <input type="number" value="${config.hexSize}" min="10" max="100" onchange="actualizarConfigMapa('hexSize', this.value)"></label>
+        <label>Offset X: <input type="number" value="${config.offsetX || 0}" onchange="actualizarConfigMapa('offsetX', this.value)"></label>
+        <label>Offset Y: <input type="number" value="${config.offsetY || 0}" onchange="actualizarConfigMapa('offsetY', this.value)"></label>
+      </div>
+      
+      <div class="mapa-viewport" id="mapa-viewport">
+        <div class="mapa-lienzo" id="mapa-lienzo" style="position: relative;" onclick="manejarClickMapa(event)">
+          <img src="${mapa.imagen}" class="mapa-imagen" id="mapa-imagen" onload="inicializarCanvasFow()">
+          <canvas id="region-canvas" class="region-canvas"></canvas>
+          <canvas id="fow-canvas" class="fow-canvas"></canvas>
+          <canvas id="grid-canvas" class="grid-canvas"></canvas>
+          <div class="mapa-pins">
+            ${pinsHTML}
+            ${marcadoresHTML}
+          </div>
+          <div class="hover-hex" id="hover-hex"></div>
+        </div>
+      </div>
+      
+      <div class="mapa-leyenda">
+        <span class="leyenda-item">🏕️ Asentamiento</span>
+        <span class="leyenda-item">📍 Marcador</span>
+        <span class="leyenda-item" style="color: rgba(220, 38, 38, 0.8);">⬡ Región (6 hex)</span>
+      </div>
+    </div>
+    
+    <style>
+      .visor-mapa-container { display: flex; flex-direction: column; height: 100%; background: #1a1a2e; border-radius: 8px; overflow: hidden; }
+      .mapa-toolbar { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1); }
+      .toolbar-grupo { display: flex; gap: 1rem; align-items: center; }
+      .toolbar-check { display: flex; align-items: center; gap: 0.3rem; cursor: pointer; font-size: 0.85rem; }
+      .btn-toolbar, .btn-admin { background: rgba(100,100,200,0.2); border: 1px solid rgba(100,100,200,0.4); color: #fff; padding: 0.3rem 0.6rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+      .btn-admin.activo { background: rgba(200,100,100,0.3); border-color: rgba(200,100,100,0.5); }
+      .mapa-config-bar { display: flex; gap: 1rem; padding: 0.5rem 1rem; background: rgba(0,0,0,0.2); font-size: 0.8rem; }
+      .mapa-config-bar input { width: 60px; background: #333; border: 1px solid #555; color: #fff; padding: 2px 5px; border-radius: 3px; }
+      .mapa-viewport { flex: 1; overflow: auto; position: relative; }
+      .mapa-lienzo { display: inline-block; position: relative; min-width: 100%; min-height: 100%; }
+      .mapa-imagen { display: block; max-width: none; }
+      .region-canvas { position: absolute; top: 0; left: 0; z-index: 12; pointer-events: none; }
+      .fow-canvas { position: absolute; top: 0; left: 0; z-index: 15; pointer-events: none; }
+      .grid-canvas { position: absolute; top: 0; left: 0; z-index: 18; pointer-events: none; }
+      .mapa-pins { position: absolute; top: 0; left: 0; z-index: 25; pointer-events: none; }
+      .mapa-pin { position: absolute; display: flex; flex-direction: column; align-items: center; pointer-events: auto; cursor: pointer; transition: transform 0.2s; }
+      .mapa-pin:hover { transform: translate(-50%, -50%) scale(1.2); z-index: 30; }
+      .pin-icono { font-size: 1.5rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+      .pin-imagen { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid #ffd700; box-shadow: 0 2px 8px rgba(0,0,0,0.5); }
+      .pin-label { font-size: 0.7rem; background: rgba(0,0,0,0.7); padding: 2px 6px; border-radius: 3px; white-space: nowrap; margin-top: 2px; }
+      .mapa-marcador { position: absolute; font-size: 1.2rem; pointer-events: auto; cursor: pointer; }
+      .hover-hex { position: absolute; pointer-events: none; z-index: 20; border: 2px solid rgba(255,255,0,0.6); background: rgba(255,255,0,0.1); display: none; }
+      .mapa-leyenda { display: flex; gap: 1.5rem; padding: 0.5rem 1rem; background: rgba(0,0,0,0.3); font-size: 0.8rem; border-top: 1px solid rgba(255,255,255,0.1); }
+      .mapa-vacio { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; gap: 1rem; opacity: 0.7; }
+      .btn-cargar-mapa { background: rgba(100,200,100,0.2); border: 1px solid rgba(100,200,100,0.4); color: #fff; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; }
+      
+      /* Settlement Popup Styles */
+      .popup-mapa { position: absolute; z-index: 100; background: linear-gradient(135deg, rgba(30,30,60,0.98) 0%, rgba(20,20,40,0.98) 100%); border: 1px solid rgba(100,100,255,0.3); border-radius: 8px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); min-width: 150px; animation: popupFadeIn 0.15s ease-out; }
+      @keyframes popupFadeIn { from { opacity: 0; transform: scale(0.95) translateY(-5px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+      .popup-header { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); border-radius: 8px 8px 0 0; }
+      .popup-titulo { font-weight: 600; font-size: 0.85rem; color: #ffd700; }
+      .popup-cerrar { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 1rem; padding: 0 0.25rem; }
+      .popup-cerrar:hover { color: #ff6b6b; }
+      .popup-opciones { display: flex; flex-direction: column; gap: 0.25rem; padding: 0.5rem; }
+      .popup-btn { display: flex; align-items: center; gap: 0.5rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 0.5rem 0.75rem; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: all 0.15s ease; text-align: left; }
+      .popup-btn:hover:not(:disabled) { background: rgba(100,150,255,0.2); border-color: rgba(100,150,255,0.4); transform: translateX(2px); }
+      .popup-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+      .popup-btn-explorar { border-color: rgba(100,200,100,0.4); }
+      .popup-btn-explorar:hover { background: rgba(100,200,100,0.2); border-color: rgba(100,200,100,0.6); }
+      .popup-btn-admin { border-color: rgba(255,100,100,0.3); }
+      .popup-btn-admin:hover { background: rgba(255,100,100,0.15); border-color: rgba(255,100,100,0.5); }
+    </style>
+  `;
+}
+
+// Toggle Admin mode for map (with password)
+function toggleAdminMapa() {
+  if (!estadoApp.mapaAdmin) {
+    // Enabling admin - require password
+    const password = prompt("Ingresa la contraseña de administrador:");
+    if (password !== "admin") {
+      mostrarNotificacion("Contraseña incorrecta", "error");
+      return;
+    }
+  }
+  estadoApp.mapaAdmin = !estadoApp.mapaAdmin;
+  mostrarNotificacion(estadoApp.mapaAdmin ? "🔧 Modo Admin activado" : "🔒 Modo Admin desactivado");
+  renderizarPantalla();
+}
+
+// State for settlement relocation and exploration
+let asentamientoReubicando = null;
+let asentamientoExplorando = null;
+
+// Click handler for map pins - shows popup with options
+function clickPinMapa(asentamientoId, event) {
+  event.stopPropagation();
+
+  const asentamiento = estadoApp.expedicion.asentamientos.find(a => a.id === asentamientoId);
+  if (!asentamiento) return;
+
+  // Get click position for popup placement
+  const rect = event.target.closest('.mapa-viewport')?.getBoundingClientRect() || { left: 0, top: 0 };
+  const popupX = event.clientX - rect.left + 10;
+  const popupY = event.clientY - rect.top - 20;
+
+  mostrarPopupAsentamiento(asentamientoId, popupX, popupY);
+}
+
+// Show popup with settlement options
+function mostrarPopupAsentamiento(asentamientoId, x, y) {
+  // Remove any existing popup
+  cerrarPopupMapa();
+
+  const asentamiento = estadoApp.expedicion.asentamientos.find(a => a.id === asentamientoId);
+  if (!asentamiento) return;
+
+  const isAdmin = estadoApp.mapaAdmin;
+
+  // Check if exploration was used this turn
+  const exploracionUsada = estadoSimulacion.exploracionUsadaTurno?.[asentamientoId] || false;
+
+  const popup = document.createElement('div');
+  popup.id = 'popup-mapa-asentamiento';
+  popup.className = 'popup-mapa';
+  popup.style.left = x + 'px';
+  popup.style.top = y + 'px';
+
+  popup.innerHTML = `
+    <div class="popup-header">
+      <span class="popup-titulo">${asentamiento.nombre}</span>
+      <button class="popup-cerrar" onclick="cerrarPopupMapa()">✕</button>
+    </div>
+    <div class="popup-opciones">
+      <button class="popup-btn" onclick="gestionarAsentamiento(${asentamientoId}); cerrarPopupMapa();">
+        📋 Ver Detalles
+      </button>
+      ${!exploracionUsada ? `
+        <button class="popup-btn popup-btn-explorar" onclick="iniciarExploracion(${asentamientoId})">
+          🔭 Explorar
+        </button>
+      ` : `
+        <button class="popup-btn" disabled title="Ya exploraste este turno">
+          ✓ Explorado
+        </button>
+      `}
+      ${isAdmin ? `
+        <button class="popup-btn popup-btn-admin" onclick="iniciarReubicacion(${asentamientoId})">
+          📍 Mover Token
+        </button>
+      ` : ''}
+    </div>
+  `;
+
+  document.querySelector('.mapa-viewport')?.appendChild(popup);
+}
+
+// Close map popup
+function cerrarPopupMapa() {
+  const popup = document.getElementById('popup-mapa-asentamiento');
+  if (popup) popup.remove();
+}
+
+// Start relocation mode (Admin only)
+function iniciarReubicacion(asentamientoId) {
+  cerrarPopupMapa();
+  asentamientoReubicando = asentamientoId;
+  const asentamiento = estadoApp.expedicion.asentamientos.find(a => a.id === asentamientoId);
+  mostrarNotificacion("📍 Haz clic en el mapa para reubicar " + asentamiento?.nombre, "info");
+}
+
+// Start exploration mode
+function iniciarExploracion(asentamientoId) {
+  cerrarPopupMapa();
+  asentamientoExplorando = asentamientoId;
+  const asentamiento = estadoApp.expedicion.asentamientos.find(a => a.id === asentamientoId);
+  mostrarNotificacion("🔭 Haz clic en un hex visible para explorar alrededor", "info");
+}
+
+// Handle click on map for relocation OR exploration
+function manejarClickMapa(event) {
+  // Close any open popup first
+  cerrarPopupMapa();
+
+  const mapa = estadoApp.expedicion.mapa;
+  const config = mapa.config;
+  const rect = event.target.getBoundingClientRect();
+  const clickX = event.clientX - rect.left;
+  const clickY = event.clientY - rect.top;
+
+  // Convert pixel to hex coordinates (pointy-top)
+  const x = clickX - (config.offsetX || 0);
+  const y = clickY - (config.offsetY || 0);
+  const size = config.hexSize;
+
+  const q = (Math.sqrt(3) / 3 * x - 1 / 3 * y) / size;
+  const r = (2 / 3 * y) / size;
+  const rounded = roundHex(q, r);
+
+  // Handle relocation mode
+  if (asentamientoReubicando) {
+    mapa.ubicaciones[asentamientoReubicando] = { q: rounded.q, r: rounded.r };
+    const asentamiento = estadoApp.expedicion.asentamientos.find(a => a.id === asentamientoReubicando);
+    mostrarNotificacion(`✅ ${asentamiento?.nombre || 'Asentamiento'} reubicado`);
+    asentamientoReubicando = null;
+    guardarExpedicion();
+    renderizarPantalla();
+    return;
+  }
+
+  // Handle exploration mode
+  if (asentamientoExplorando) {
+    ejecutarExploracion(asentamientoExplorando, rounded.q, rounded.r);
+    return;
+  }
+}
+
+// Execute exploration: reveal 2 hexes around clicked hex
+function ejecutarExploracion(asentamientoId, centerQ, centerR) {
+  const mapa = estadoApp.expedicion.mapa;
+
+  // Initialize hexesExplorados if needed
+  if (!mapa.hexesExplorados) mapa.hexesExplorados = {};
+  if (!mapa.hexesExplorados[asentamientoId]) mapa.hexesExplorados[asentamientoId] = [];
+
+  const explorados = mapa.hexesExplorados[asentamientoId];
+  const EXPLORATION_RADIUS = 2;
+  let nuevosHexes = 0;
+
+  // Add hexes within 2 radius of clicked hex
+  for (let dq = -EXPLORATION_RADIUS; dq <= EXPLORATION_RADIUS; dq++) {
+    for (let dr = Math.max(-EXPLORATION_RADIUS, -dq - EXPLORATION_RADIUS); dr <= Math.min(EXPLORATION_RADIUS, -dq + EXPLORATION_RADIUS); dr++) {
+      const q = centerQ + dq;
+      const r = centerR + dr;
+
+      // Check if already explored
+      const yaExplorado = explorados.some(h => h.q === q && h.r === r);
+      if (!yaExplorado) {
+        explorados.push({ q, r });
+        nuevosHexes++;
+      }
+    }
+  }
+
+  // Mark exploration as used this turn
+  if (!estadoSimulacion.exploracionUsadaTurno) estadoSimulacion.exploracionUsadaTurno = {};
+  estadoSimulacion.exploracionUsadaTurno[asentamientoId] = true;
+
+  const asentamiento = estadoApp.expedicion.asentamientos.find(a => a.id === asentamientoId);
+  mostrarNotificacion(`🔭 ${asentamiento?.nombre}: ${nuevosHexes} hexes explorados`);
+
+  asentamientoExplorando = null;
+  guardarExpedicion();
+  renderizarPantalla();
+}
+
+// Helper: Round fractional hex to nearest hex
+function roundHex(q, r) {
+  let x = q;
+  let z = r;
+  let y = -x - z;
+
+  let rx = Math.round(x);
+  let rz = Math.round(z);
+  let ry = Math.round(y);
+
+  const x_diff = Math.abs(rx - x);
+  const y_diff = Math.abs(ry - y);
+  const z_diff = Math.abs(rz - z);
+
+  if (x_diff > y_diff && x_diff > z_diff) {
+    rx = -ry - rz;
+  } else if (y_diff > z_diff) {
+    ry = -rx - rz;
+  } else {
+    rz = -rx - ry;
+  }
+
+  return { q: rx, r: rz };
+}
+
+// Toggle grid visibility
+function toggleGridMapa(mostrar) {
+  if (!estadoApp.expedicion.mapa) return;
+  estadoApp.expedicion.mapa.config = estadoApp.expedicion.mapa.config || {};
+  estadoApp.expedicion.mapa.config.mostrarGrid = mostrar;
+  const canvas = document.getElementById('grid-canvas');
+  if (canvas) canvas.style.display = mostrar ? 'block' : 'none';
+  guardarExpedicion();
+}
+
+// Toggle fog of war visibility
+function toggleFowMapa(mostrar) {
+  if (!estadoApp.expedicion.mapa) return;
+  estadoApp.expedicion.mapa.config = estadoApp.expedicion.mapa.config || {};
+  estadoApp.expedicion.mapa.config.mostrarFow = mostrar;
+  const canvas = document.getElementById('fow-canvas');
+  if (canvas) canvas.style.display = mostrar ? 'block' : 'none';
+  guardarExpedicion();
+}
+
+// Load map image
+function cargarImagenMapa(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    if (!estadoApp.expedicion.mapa) {
+      estadoApp.expedicion.mapa = { config: { hexSize: 30, offsetX: 0, offsetY: 0, mostrarGrid: true, mostrarFow: true }, ubicaciones: {}, marcadores: [] };
+    }
+    estadoApp.expedicion.mapa.imagen = e.target.result;
+    guardarExpedicion();
+    renderizarPantalla();
+    mostrarNotificacion('🗺️ Mapa cargado correctamente');
+  };
+  reader.readAsDataURL(file);
+}
+
+// Update map config
+function actualizarConfigMapa(prop, valor) {
+  if (!estadoApp.expedicion.mapa) return;
+  estadoApp.expedicion.mapa.config = estadoApp.expedicion.mapa.config || {};
+  estadoApp.expedicion.mapa.config[prop] = parseInt(valor) || 0;
+  guardarExpedicion();
+
+  // Re-render canvases
+  inicializarCanvasFow();
+  renderizarPantalla();
+}
+
+// Initialize canvas layers for fog of war, grid, and region
+function inicializarCanvasFow() {
+  const img = document.getElementById('mapa-imagen');
+  if (!img || !img.complete) return;
+
+  const w = img.naturalWidth;
+  const h = img.naturalHeight;
+
+  const canvasFow = document.getElementById('fow-canvas');
+  const canvasGrid = document.getElementById('grid-canvas');
+  const canvasRegion = document.getElementById('region-canvas');
+
+  if (canvasFow) { canvasFow.width = w; canvasFow.height = h; }
+  if (canvasGrid) { canvasGrid.width = w; canvasGrid.height = h; }
+  if (canvasRegion) { canvasRegion.width = w; canvasRegion.height = h; }
+
+  dibujarRegion();
+  dibujarNiebla();
+  dibujarGrid();
+}
+
+// Draw fog of war with 3 states:
+// 1. Unexplored: Fully black
+// 2. Explored but not visible: Dark fog (semi-transparent)
+// 3. Visible (in settlement range): Clear
+function dibujarNiebla() {
+  const canvas = document.getElementById('fow-canvas');
+  if (!canvas) return;
+
+  const mapa = estadoApp.expedicion?.mapa;
+  if (!mapa?.config?.mostrarFow) {
+    canvas.style.display = 'none';
+    return;
+  }
+  canvas.style.display = 'block';
+
+  const ctx = canvas.getContext('2d');
+  const asentamientos = estadoApp.expedicion?.asentamientos || [];
+  const hexSize = mapa.config.hexSize || 30;
+  const offsetX = mapa.config.offsetX || 0;
+  const offsetY = mapa.config.offsetY || 0;
+  const hexesExplorados = mapa.hexesExplorados || {};
+
+  // Step 1: Fill entire canvas with fully black fog (unexplored)
+  ctx.fillStyle = 'rgba(0, 0, 0, 1)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Step 2: Draw explored hexes with semi-transparent fog
+  ctx.globalCompositeOperation = 'destination-out';
+
+  Object.values(hexesExplorados).forEach(hexList => {
+    hexList.forEach(hex => {
+      const x = hexSize * Math.sqrt(3) * (hex.q + hex.r / 2) + offsetX;
+      const y = hexSize * 1.5 * hex.r + offsetY;
+
+      // Draw hex shape to cut out
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i + (Math.PI / 6);
+        const px = x + hexSize * Math.cos(angle);
+        const py = y + hexSize * Math.sin(angle);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+    });
+  });
+
+  // Step 3: Overlay fog on explored areas (semi-transparent)
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = 'rgba(20, 30, 50, 0.6)'; // Dark fog for explored but not visible
+
+  Object.values(hexesExplorados).forEach(hexList => {
+    hexList.forEach(hex => {
+      const x = hexSize * Math.sqrt(3) * (hex.q + hex.r / 2) + offsetX;
+      const y = hexSize * 1.5 * hex.r + offsetY;
+
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle = (Math.PI / 3) * i + (Math.PI / 6);
+        const px = x + hexSize * Math.cos(angle);
+        const py = y + hexSize * Math.sin(angle);
+        if (i === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+    });
+  });
+
+  // Step 4: Clear areas around settlements (fully visible)
+  ctx.globalCompositeOperation = 'destination-out';
+
+  asentamientos.forEach(a => {
+    const ubicacion = mapa.ubicaciones?.[a.id];
+    if (!ubicacion) return;
+
+    const q = ubicacion.q;
+    const r = ubicacion.r;
+    const x = hexSize * Math.sqrt(3) * (q + r / 2) + offsetX;
+    const y = hexSize * 1.5 * r + offsetY;
+
+    // Vision radius (primary settlement sees further)
+    const visionRadius = (a.esPrimerAsentamiento ? 7 : 4) * hexSize;
+
+    const gradient = ctx.createRadialGradient(x, y, 0, x, y, visionRadius);
+    gradient.addColorStop(0, 'rgba(0,0,0,1)');
+    gradient.addColorStop(0.7, 'rgba(0,0,0,0.8)');
+    gradient.addColorStop(1, 'rgba(0,0,0,0)');
+
+    ctx.fillStyle = gradient;
+    ctx.beginPath();
+    ctx.arc(x, y, visionRadius, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  ctx.globalCompositeOperation = 'source-over';
+}
+
+// Draw region border around first settlement (4 hex radius)
+function dibujarRegion() {
+  const canvas = document.getElementById('region-canvas');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const mapa = estadoApp.expedicion?.mapa;
+  if (!mapa) return;
+
+  const asentamientos = estadoApp.expedicion?.asentamientos || [];
+  const primerAsentamiento = asentamientos.find(a => a.esPrimerAsentamiento);
+  if (!primerAsentamiento) return;
+
+  const ubicacion = mapa.ubicaciones?.[primerAsentamiento.id];
+  if (!ubicacion) return;
+
+  const hexSize = mapa.config.hexSize || 30;
+  const offsetX = mapa.config.offsetX || 0;
+  const offsetY = mapa.config.offsetY || 0;
+  const REGION_RADIUS = 4; // 4 hexes de distancia
+
+  const centerQ = ubicacion.q;
+  const centerR = ubicacion.r;
+
+  // Draw red border for boundary hexes
+  ctx.strokeStyle = 'rgba(220, 38, 38, 0.8)';
+  ctx.lineWidth = 2;
+  ctx.fillStyle = 'rgba(220, 38, 38, 0.05)';
+
+  for (let dq = -REGION_RADIUS; dq <= REGION_RADIUS; dq++) {
+    for (let dr = Math.max(-REGION_RADIUS, -dq - REGION_RADIUS); dr <= Math.min(REGION_RADIUS, -dq + REGION_RADIUS); dr++) {
+      const dist = (Math.abs(dq) + Math.abs(dr) + Math.abs(-dq - dr)) / 2;
+      if (dist > REGION_RADIUS) continue;
+
+      const q = centerQ + dq;
+      const r = centerR + dr;
+
+      // POINTY-TOP center
+      const x = hexSize * Math.sqrt(3) * (q + r / 2) + offsetX;
+      const y = hexSize * 1.5 * r + offsetY;
+
+      // Only draw border for boundary hexes
+      if (dist === REGION_RADIUS) {
+        ctx.beginPath();
+        for (let i = 0; i < 6; i++) {
+          const angle = (Math.PI / 3) * i + (Math.PI / 6);
+          const px = x + hexSize * Math.cos(angle);
+          const py = y + hexSize * Math.sin(angle);
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.closePath();
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+// Draw hex grid
+function dibujarGrid() {
+  const canvas = document.getElementById('grid-canvas');
+  if (!canvas) return;
+
+  const mapa = estadoApp.expedicion?.mapa;
+  if (!mapa?.config?.mostrarGrid) {
+    canvas.style.display = 'none';
+    return;
+  }
+  canvas.style.display = 'block';
+
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const hexSize = mapa.config.hexSize || 30;
+  const offsetX = mapa.config.offsetX || 0;
+  const offsetY = mapa.config.offsetY || 0;
+
+  // Calculate grid bounds
+  const hexWidth = Math.sqrt(3) * hexSize;
+  const hexHeight = 2 * hexSize;
+  const vertDist = hexHeight * 0.75;
+
+  const cols = Math.ceil(canvas.width / hexWidth) + 2;
+  const rows = Math.ceil(canvas.height / vertDist) + 2;
+
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+  ctx.lineWidth = 1;
+
+  for (let row = -1; row < rows; row++) {
+    for (let col = -1; col < cols; col++) {
+      const q = col;
+      const r = row;
+
+      // POINTY-TOP center
+      const x = hexSize * Math.sqrt(3) * (q + r / 2) + offsetX;
+      const y = hexSize * 1.5 * r + offsetY;
+
+      // Draw hex
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const angle_deg = 60 * i + 30; // Pointy-top
+        const angle_rad = Math.PI / 180 * angle_deg;
+        const px = x + hexSize * Math.cos(angle_rad);
+        const py = y + hexSize * Math.sin(angle_rad);
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.stroke();
+    }
+  }
+}
+
+// Export complete map data
+function exportarMapaCompleto() {
+  const mapa = estadoApp.expedicion?.mapa;
+  if (!mapa) {
+    mostrarNotificacion('No hay mapa para exportar', 'error');
+    return;
+  }
+
+  const data = {
+    mapa: mapa,
+    asentamientos: estadoApp.expedicion.asentamientos.map(a => ({
+      id: a.id,
+      nombre: a.nombre,
+      grado: a.grado,
+      esPrimerAsentamiento: a.esPrimerAsentamiento
+    })),
+    exportedAt: new Date().toISOString()
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'mapa_' + (estadoApp.expedicion.nombre || 'expedicion').replace(/[^a-zA-Z0-9]/g, '_') + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  mostrarNotificacion('📤 Mapa exportado correctamente');
+}
+
+// Import complete map data
+function importarMapaCompleto(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.mapa) {
+        estadoApp.expedicion.mapa = data.mapa;
+        guardarExpedicion();
+        renderizarPantalla();
+        mostrarNotificacion('📥 Mapa importado correctamente');
+      }
+    } catch (err) {
+      mostrarNotificacion('Error al importar mapa: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// =====================================================
+// TOKEN UPLOAD FOR HUD (EXISTING SETTLEMENT)
+// =====================================================
+
+// Upload token image for the current settlement in HUD view
+function subirTokenAsentamiento(input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    mostrarNotificacion('Por favor selecciona un archivo de imagen válido', 'error');
+    return;
+  }
+
+  // Limit to 2MB
+  if (file.size > 2 * 1024 * 1024) {
+    mostrarNotificacion('La imagen es muy grande. Máximo 2MB.', 'error');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    if (estadoApp.asentamiento) {
+      estadoApp.asentamiento.imagenPersonalizada = e.target.result;
+      guardarExpedicion();
+      actualizarHUD();
+      mostrarNotificacion('🖼️ Token actualizado correctamente', 'success');
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// Remove token image from the current settlement
+function eliminarTokenAsentamiento() {
+  if (estadoApp.asentamiento) {
+    estadoApp.asentamiento.imagenPersonalizada = null;
+    guardarExpedicion();
+    actualizarHUD();
+    mostrarNotificacion('🗑️ Token eliminado', 'success');
+  }
+}
 
