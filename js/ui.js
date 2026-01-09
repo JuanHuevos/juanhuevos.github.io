@@ -86,11 +86,136 @@ function btnPasarTurno() {
   // Save expedition
   guardarExpedicion();
 
+  // Generate turn report
+  generarReporteTurno(asentamientoActual, resultado);
+
   // Show notification
   mostrarNotificacion(`Turno ${resultado.turno} completado`, 'success');
 
   // Re-render UI
   renderizarPantalla();
+}
+
+/**
+ * Generates a text report of the turn and triggers download
+ */
+function generarReporteTurno(asentamiento, resultadoTurno) {
+  if (!asentamiento || !resultadoTurno) return;
+
+  const turno = resultadoTurno.turno;
+  const nombre = asentamiento.nombre || 'Asentamiento';
+  const grado = asentamiento.grado || 'Campamento';
+
+  // Calculate stats
+  const stats = calcularEstadisticasTotales(asentamiento);
+  const poblacionTotal = (estadoSimulacion.poblacion || []).reduce((sum, p) => sum + (p.cantidad || 1), 0);
+  const calidadTotal = stats?.calidadTotal || 0;
+
+  // Production data
+  const produccionEdificios = calcularProduccionEdificios(asentamiento.edificios || [], stats);
+  const alimentoProduccion = produccionEdificios?.["Alimento"]?.total || 0;
+  const alimentoConsumo = poblacionTotal; // 1 per cuota
+
+  // Storage
+  const almacen = estadoSimulacion.almacen || {};
+  const doblones = estadoSimulacion.doblones || 0;
+  const doblonesProduccion = produccionEdificios?.["Doblones"]?.total || 0;
+
+  // Buildings
+  const edificiosConstruidos = (asentamiento.edificios || []).map(e => {
+    const nombre = typeof e === 'string' ? e : e.nombre;
+    const def = EDIFICIOS?.[nombre];
+    return `${nombre} ${def?.efectos?.Calidad ? `(+${def.efectos.Calidad} Calidad)` : ''}`;
+  });
+
+  // Devotion
+  const devocion = estadoSimulacion.devocion || {};
+  const devocionDominante = Object.entries(devocion).find(([k, v]) => v?.activa)?.[0] || 'Ninguna';
+
+  // Build report text
+  let reporte = `# Comienzo Turno ${turno}
+
+# ${nombre}
+
+*Grado: ${grado}*
+
+## Población y Calidad
+Población: ${poblacionTotal} cuotas
+Calidad Total: +${calidadTotal}
+
+## Alimentos
+Producción: +${alimentoProduccion} Medidas de Alimentos por Turno
+Consumo: -${alimentoConsumo} Medidas de Alimentos por Turno
+
+## Tributo
+${asentamiento.tributo || 'Sin Tributo'}
+
+## Producción
+Doblones: ${doblonesProduccion >= 0 ? '+' : ''}${doblonesProduccion}/Turno
+
+## Almacenamiento
+`;
+
+  // List storage items
+  Object.entries(almacen).forEach(([recurso, cantidad]) => {
+    reporte += `- ${cantidad} Cuotas de ${recurso}\n`;
+  });
+  reporte += `- ${doblones} Doblones\n`;
+
+  reporte += `
+## Devoción
+Devoción Dominante: ${devocionDominante}
+
+## Construcciones
+`;
+
+  edificiosConstruidos.forEach(e => {
+    reporte += `- ${e}\n`;
+  });
+
+  reporte += `
+---
+
+# Turno ${turno}: Resumen de Cambios
+
+`;
+
+  // Add turn log if available
+  if (resultadoTurno.log && resultadoTurno.log.length > 0) {
+    resultadoTurno.log.forEach(entry => {
+      reporte += `${entry}\n`;
+    });
+  }
+
+  // Add production details
+  if (produccionEdificios && Object.keys(produccionEdificios).length > 0) {
+    reporte += `\n## Producción por Edificios\n`;
+    Object.entries(produccionEdificios).forEach(([recurso, data]) => {
+      if (data.fuentes) {
+        data.fuentes.forEach(f => {
+          reporte += `- ${f.edificio} (${f.cuotas} cuotas): +${f.produccion} ${recurso}\n`;
+        });
+      }
+    });
+  }
+
+  // Trigger download
+  descargarArchivoTexto(`turno_${turno}_${nombre.replace(/\s+/g, '_')}.txt`, reporte);
+}
+
+/**
+ * Downloads a text file with the given content
+ */
+function descargarArchivoTexto(nombreArchivo, contenido) {
+  const blob = new Blob([contenido], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = nombreArchivo;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
 
 function btnDeshacerTurno() {
@@ -329,9 +454,26 @@ function renderizarListaAsentamientos(container) {
           </div>
         </div>
         <div class="lista-acciones">
-          <button class="btn-guardar-expedicion" onclick="guardarExpedicionUI()">
-            💾 Guardar
-          </button>
+          
+          <!-- Dropdown for Export/Import -->
+          <div class="dropdown-container" id="dropdown-datos">
+            <button class="btn-datos-dropdown" onclick="toggleDropdownDatos()">
+              📦 Datos ▼
+            </button>
+            <div class="dropdown-menu" id="dropdown-datos-menu" style="display: none;">
+              <button class="dropdown-item" onclick="exportarTodosAsentamientos(); cerrarDropdownDatos();">
+                📤 Exportar Todos
+              </button>
+              <button class="dropdown-item" onclick="importarAsentamientosUI(); cerrarDropdownDatos();">
+                📥 Importar
+              </button>
+              <hr class="dropdown-divider">
+              <button class="dropdown-item dropdown-item-muted" onclick="guardarYExportarExpedicion(); cerrarDropdownDatos();">
+                💾 Exportar Expedición Completa
+              </button>
+            </div>
+          </div>
+          
           <button class="btn-crear-asentamiento" onclick="iniciarCreacionAsentamiento()">
             ➕ Crear Asentamiento
           </button>
@@ -545,7 +687,12 @@ function renderizarCardAsentamiento(asentamiento) {
     })
     .filter(Boolean)
     .join(', ');
-  const poblacionTotal = asentamiento.poblacion?.reduce((sum, p) => sum + (p.cantidad * 20), 0) || 0;
+
+  // Read from simulacion if available (contains current turn data), otherwise from initial config
+  const simData = asentamiento.simulacion;
+  const poblacionData = simData?.poblacion || asentamiento.poblacion;
+  const poblacionTotal = poblacionData?.reduce((sum, p) => sum + ((p.cantidad || 1) * 20), 0) || 0;
+  const doblonesActual = simData?.doblones ?? asentamiento.doblones ?? 0;
 
   return `
     <div class="asentamiento-card" onclick="seleccionarAsentamiento(${asentamiento.id})">
@@ -568,7 +715,7 @@ function renderizarCardAsentamiento(asentamiento) {
         </div>
         <div class="card-stat">
           <span class="stat-label">Doblones</span>
-          <span class="stat-value">${asentamiento.doblones || 0}</span>
+          <span class="stat-value">${doblonesActual}</span>
         </div>
       </div>
       
@@ -2419,37 +2566,37 @@ function renderizarHUD(container) {
           </div>
           
           <div class="hud-quick-stats">
-            <div class="quick-stat" title="Cuotas de Población">
+            <div class="quick-stat tooltip-container" data-tooltip="Cuotas de Población&#10;• Cada cuota = 20 habitantes&#10;• Total: ${poblacionTotal * 20} habitantes">
               <span class="qs-icon">👥</span>
               <span class="qs-value">${poblacionTotal}</span>
               <span class="qs-label">Población</span>
             </div>
-            <div class="quick-stat" title="Doblones disponibles">
+            <div class="quick-stat tooltip-container" data-tooltip="💰 Doblones: ${doblones}&#10;&#10;📈 Ingresos por turno:&#10;• Tributo: ${Math.floor((stats.calidadTotal || 0) * (a.tributo || 1) / 10)} por cuota&#10;• Mercado: +pasivos de edificios&#10;&#10;📉 Gastos por turno:&#10;• Mantenimiento edificios: ${stats.mantenimientoEdificios || 0}&#10;• Artificiales: ${(estadoSimulacion?.poblacion || []).filter(c => c.naturaleza === 'Artificial').length}">
               <span class="qs-icon">💰</span>
               <span class="qs-value ${doblones < 0 ? 'negativo' : ''}">${doblones}</span>
               <span class="qs-label">Doblones</span>
             </div>
-            <div class="quick-stat" title="Influencia política">
+            <div class="quick-stat tooltip-container" data-tooltip="🏛️ Influencia: ${estadoSimulacion?.recursosEspeciales?.influencia || 0}&#10;&#10;• Usada para decretos políticos&#10;• Se genera por edificios políticos&#10;• Acumulativa entre turnos">
               <span class="qs-icon">🏛️</span>
               <span class="qs-value">${estadoSimulacion?.recursosEspeciales?.influencia || 0}</span>
               <span class="qs-label">Influencia</span>
             </div>
-            <div class="quick-stat" title="Alimento en almacén (todos los tipos)">
+            <div class="quick-stat tooltip-container" data-tooltip="🌾 Alimento Total: ${alimentosEnAlmacen}&#10;&#10;📈 Producción: Campos, Granjas, etc.&#10;📉 Consumo: ${poblacionTotal} cuotas x turno&#10;&#10;${alimentosEnAlmacen >= poblacionTotal ? '✅ Suficiente' : '⚠️ ¡Riesgo de hambruna!'}">
               <span class="qs-icon">🌾</span>
               <span class="qs-value ${alimentosEnAlmacen < poblacionTotal ? 'warning' : ''}">${alimentosEnAlmacen}</span>
               <span class="qs-label">Alimento</span>
             </div>
-            <div class="quick-stat" title="Calidad Total del Asentamiento">
+            <div class="quick-stat tooltip-container" data-tooltip="⭐ Calidad Total: ${calidad >= 0 ? '+' : ''}${calidad}&#10;&#10;📊 Composición:&#10;• Base bioma/propiedades&#10;• Mod. población: ${stats.bonificaciones?.modCalidad || 0}&#10;• Mod. edificios&#10;• Hambruna: ${estadoSimulacion?.esHambruna ? '-8' : '0'}&#10;&#10;💡 Afecta tributo e inmigración">
               <span class="qs-icon">⭐</span>
               <span class="qs-value ${calidad >= 0 ? 'positivo' : 'negativo'}">${calidad >= 0 ? '+' : ''}${calidad}</span>
               <span class="qs-label">Calidad</span>
             </div>
-            <div class="quick-stat" title="Ideas acumuladas">
+            <div class="quick-stat tooltip-container" data-tooltip="💡 Ideas: ${estadoSimulacion?.ideas || 0}&#10;&#10;• Generadas por Académicos&#10;• Usadas para investigación&#10;• Acumulativas entre turnos">
               <span class="qs-icon">💡</span>
               <span class="qs-value">${estadoSimulacion?.ideas || 0}</span>
               <span class="qs-label">Ideas</span>
             </div>
-            <div class="quick-stat" title="Puntos de Devoción">
+            <div class="quick-stat tooltip-container" data-tooltip="🙏 Devoción: ${estadoSimulacion?.devocion || 0}&#10;&#10;• Generada por Devotos&#10;• Usada para milagros&#10;• Acumulativa entre turnos">
               <span class="qs-icon">🙏</span>
               <span class="qs-value">${estadoSimulacion?.devocion || 0}</span>
               <span class="qs-label">Devoción</span>
@@ -4305,6 +4452,11 @@ function renderizarPestanaComercio(a, stats) {
   const historial = estadoSimulacion?.historialComercio || [];
   const turnoActual = estadoSimulacion?.turno || 0;
 
+  // Backward compatibility: assign IDs to old transactions without them
+  historial.forEach((t, i) => {
+    if (!t.id) t.id = Date.now() + i;
+  });
+
   // Ordenar historial por turno descendente (más recientes primero)
   const historialOrdenado = [...historial].sort((a, b) => b.turno - a.turno);
 
@@ -4395,10 +4547,10 @@ function renderizarPestanaComercio(a, stats) {
                       </td>
                       <td>${entry.comerciante || '-'}</td>
                       <td class="acciones-comercio">
-                          <button class="btn-accion btn-editar" onclick="editarTransaccion(${index})" title="Editar transacción">
+                          <button class="btn-accion btn-editar" onclick="editarTransaccion(${entry.id})" title="Editar transacción">
                               ✏️
                           </button>
-                          <button class="btn-accion btn-eliminar" onclick="eliminarTransaccion(${index})" title="Eliminar transacción">
+                          <button class="btn-accion btn-eliminar" onclick="eliminarTransaccion(${entry.id})" title="Eliminar transacción">
                               🗑️
                           </button>
                       </td>
@@ -4550,11 +4702,12 @@ function agregarComercioDesdeUI() {
 
 /**
  * Edita una transacción de comercio existente
- * @param {number} index - Índice de la transacción en el historial
+ * @param {number} transaccionId - ID único de la transacción
  */
-function editarTransaccion(index) {
+function editarTransaccion(transaccionId) {
   const historial = estadoSimulacion?.historialComercio;
-  if (!historial || index < 0 || index >= historial.length) {
+  const index = historial?.findIndex(t => t.id === transaccionId);
+  if (!historial || index === -1) {
     mostrarNotificacion('Transacción no encontrada', 'error');
     return;
   }
@@ -4593,11 +4746,12 @@ function editarTransaccion(index) {
 
 /**
  * Elimina una transacción de comercio
- * @param {number} index - Índice de la transacción en el historial
+ * @param {number} transaccionId - ID único de la transacción
  */
-function eliminarTransaccion(index) {
+function eliminarTransaccion(transaccionId) {
   const historial = estadoSimulacion?.historialComercio;
-  if (!historial || index < 0 || index >= historial.length) {
+  const index = historial?.findIndex(t => t.id === transaccionId);
+  if (!historial || index === -1) {
     mostrarNotificacion('Transacción no encontrada', 'error');
     return;
   }
@@ -6754,6 +6908,14 @@ function renderizarVisorMapa(expedicion) {
           ` : ''}
         </div>
         
+        <div class="toolbar-grupo zoom-controles">
+          <button class="btn-zoom" onclick="zoomMapa(-0.1)" title="Alejar">➖</button>
+          <input type="range" id="zoom-slider" min="0.25" max="3" step="0.05" value="1" onchange="setZoomMapa(this.value)" title="Zoom">
+          <button class="btn-zoom" onclick="zoomMapa(0.1)" title="Acercar">➕</button>
+          <button class="btn-zoom" onclick="resetZoomMapa()" title="Restablecer">🔄</button>
+          <span id="zoom-level" class="zoom-level">100%</span>
+        </div>
+        
         ${isAdmin ? `
           <div class="toolbar-grupo admin-controls">
             <button onclick="toggleAdminMapa()" class="btn-admin activo">🔧 Admin</button>
@@ -6778,8 +6940,8 @@ function renderizarVisorMapa(expedicion) {
         <label>Offset Y: <input type="number" value="${config.offsetY || 0}" onchange="actualizarConfigMapa('offsetY', this.value)"></label>
       </div>
       
-      <div class="mapa-viewport" id="mapa-viewport">
-        <div class="mapa-lienzo" id="mapa-lienzo" style="position: relative;" onclick="manejarClickMapa(event)">
+      <div class="mapa-viewport" id="mapa-viewport" onmousedown="iniciarArrastreMapa(event)" onmousemove="arrastrarMapa(event)" onmouseup="terminarArrastreMapa(event)" onmouseleave="terminarArrastreMapa(event)" onwheel="zoomMapaRueda(event)">
+        <div class="mapa-lienzo" id="mapa-lienzo" style="position: relative; transform-origin: 0 0;" onclick="manejarClickMapa(event)">
           <img src="${mapa.imagen}" class="mapa-imagen" id="mapa-imagen" onload="inicializarCanvasFow()">
           <canvas id="region-canvas" class="region-canvas"></canvas>
           <canvas id="fow-canvas" class="fow-canvas"></canvas>
@@ -6841,6 +7003,22 @@ function renderizarVisorMapa(expedicion) {
       .popup-btn-explorar:hover { background: rgba(100,200,100,0.2); border-color: rgba(100,200,100,0.6); }
       .popup-btn-admin { border-color: rgba(255,100,100,0.3); }
       .popup-btn-admin:hover { background: rgba(255,100,100,0.15); border-color: rgba(255,100,100,0.5); }
+      
+      /* Zoom Controls */
+      .zoom-controles { display: flex; align-items: center; gap: 0.5rem; }
+      .btn-zoom { background: rgba(100,150,255,0.2); border: 1px solid rgba(100,150,255,0.4); color: #fff; padding: 0.3rem 0.5rem; border-radius: 4px; cursor: pointer; font-size: 0.9rem; transition: all 0.15s; }
+      .btn-zoom:hover { background: rgba(100,150,255,0.4); transform: scale(1.1); }
+      #zoom-slider { width: 80px; cursor: pointer; }
+      .zoom-level { font-size: 0.75rem; color: rgba(255,255,255,0.7); min-width: 40px; text-align: center; }
+      
+      /* Drag cursor states */
+      .mapa-viewport { cursor: grab; }
+      .mapa-viewport.arrastrando { cursor: grabbing; }
+      .mapa-viewport.arrastrando .mapa-pin { pointer-events: none; }
+      .mapa-viewport.arrastrando .mapa-marcador { pointer-events: none; }
+      
+      /* Smooth zoom transition */
+      .mapa-lienzo { transition: transform 0.1s ease-out; }
     </style>
   `;
 }
@@ -6858,6 +7036,119 @@ function toggleAdminMapa() {
   estadoApp.mapaAdmin = !estadoApp.mapaAdmin;
   mostrarNotificacion(estadoApp.mapaAdmin ? "🔧 Modo Admin activado" : "🔒 Modo Admin desactivado");
   renderizarPantalla();
+}
+
+// =====================================================
+// MAP DRAG AND ZOOM FUNCTIONALITY
+// =====================================================
+
+// State for map drag and zoom
+let mapaArrastreActivo = false;
+let mapaArrastreStartX = 0;
+let mapaArrastreStartY = 0;
+let mapaScrollStartX = 0;
+let mapaScrollStartY = 0;
+let mapaZoomLevel = 1;
+
+// Start dragging the map
+function iniciarArrastreMapa(event) {
+  // Only left mouse button
+  if (event.button !== 0) return;
+
+  // Don't start drag if clicking on controls or pins
+  if (event.target.closest('.mapa-pin') ||
+    event.target.closest('.mapa-marcador') ||
+    event.target.closest('.popup-mapa') ||
+    event.target.closest('button') ||
+    event.target.closest('input')) {
+    return;
+  }
+
+  const viewport = document.getElementById('mapa-viewport');
+  if (!viewport) return;
+
+  mapaArrastreActivo = true;
+  mapaArrastreStartX = event.clientX;
+  mapaArrastreStartY = event.clientY;
+  mapaScrollStartX = viewport.scrollLeft;
+  mapaScrollStartY = viewport.scrollTop;
+
+  viewport.classList.add('arrastrando');
+  event.preventDefault();
+}
+
+// Handle map dragging
+function arrastrarMapa(event) {
+  if (!mapaArrastreActivo) return;
+
+  const viewport = document.getElementById('mapa-viewport');
+  if (!viewport) return;
+
+  const deltaX = event.clientX - mapaArrastreStartX;
+  const deltaY = event.clientY - mapaArrastreStartY;
+
+  viewport.scrollLeft = mapaScrollStartX - deltaX;
+  viewport.scrollTop = mapaScrollStartY - deltaY;
+}
+
+// Stop dragging the map
+function terminarArrastreMapa(event) {
+  if (!mapaArrastreActivo) return;
+
+  mapaArrastreActivo = false;
+
+  const viewport = document.getElementById('mapa-viewport');
+  if (viewport) {
+    viewport.classList.remove('arrastrando');
+  }
+}
+
+// Zoom with mouse wheel
+function zoomMapaRueda(event) {
+  event.preventDefault();
+
+  // Determine zoom direction
+  const delta = event.deltaY > 0 ? -0.1 : 0.1;
+  zoomMapa(delta);
+}
+
+// Apply zoom change
+function zoomMapa(delta) {
+  const nuevoZoom = Math.max(0.25, Math.min(3, mapaZoomLevel + delta));
+  setZoomMapa(nuevoZoom);
+}
+
+// Set specific zoom level
+function setZoomMapa(nivel) {
+  mapaZoomLevel = parseFloat(nivel);
+
+  const lienzo = document.getElementById('mapa-lienzo');
+  const slider = document.getElementById('zoom-slider');
+  const label = document.getElementById('zoom-level');
+
+  if (lienzo) {
+    lienzo.style.transform = `scale(${mapaZoomLevel})`;
+  }
+
+  if (slider) {
+    slider.value = mapaZoomLevel;
+  }
+
+  if (label) {
+    label.textContent = `${Math.round(mapaZoomLevel * 100)}%`;
+  }
+}
+
+// Reset zoom to 100%
+function resetZoomMapa() {
+  setZoomMapa(1);
+
+  // Also reset scroll position to center
+  const viewport = document.getElementById('mapa-viewport');
+  if (viewport) {
+    viewport.scrollLeft = 0;
+    viewport.scrollTop = 0;
+  }
 }
 
 // State for settlement relocation and exploration
@@ -7502,3 +7793,201 @@ function eliminarTokenAsentamiento() {
   }
 }
 
+// =====================================================
+// SETTLEMENT EXPORT/IMPORT FUNCTIONS
+// =====================================================
+
+// Export a single settlement to JSON file
+function exportarAsentamientoIndividual(asentamientoId) {
+  const asentamiento = estadoApp.expedicion.asentamientos.find(a => a.id === asentamientoId);
+  if (!asentamiento) {
+    mostrarNotificacion('Asentamiento no encontrado', 'error');
+    return;
+  }
+
+  const data = {
+    asentamientos: [asentamiento],
+    exportedAt: new Date().toISOString(),
+    expedicionNombre: estadoApp.expedicion.nombre,
+    version: '1.0'
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'asentamiento_' + asentamiento.nombre.replace(/[^a-zA-Z0-9]/g, '_') + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  mostrarNotificacion(`📤 ${asentamiento.nombre} exportado`, 'success');
+}
+
+// Export all settlements to JSON file
+function exportarTodosAsentamientos() {
+  const asentamientos = estadoApp.expedicion.asentamientos || [];
+  if (asentamientos.length === 0) {
+    mostrarNotificacion('No hay asentamientos para exportar', 'error');
+    return;
+  }
+
+  const data = {
+    asentamientos: asentamientos,
+    exportedAt: new Date().toISOString(),
+    expedicionNombre: estadoApp.expedicion.nombre,
+    version: '1.0'
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'asentamientos_' + (estadoApp.expedicion.nombre || 'expedicion').replace(/[^a-zA-Z0-9]/g, '_') + '.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  mostrarNotificacion(`📤 ${asentamientos.length} asentamiento(s) exportado(s)`, 'success');
+}
+
+// UI for importing settlements - triggers file selection
+function importarAsentamientosUI() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.style.display = 'none';
+
+  input.onchange = function (event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        const data = JSON.parse(e.target.result);
+        importarAsentamientos(data);
+      } catch (err) {
+        mostrarNotificacion('Error al leer archivo: ' + err.message, 'error');
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  document.body.appendChild(input);
+  input.click();
+  document.body.removeChild(input);
+}
+
+// Import settlements from JSON data
+// Merges with existing settlements (replaces if same ID, adds if new)
+function importarAsentamientos(data) {
+  if (!data.asentamientos || !Array.isArray(data.asentamientos)) {
+    mostrarNotificacion('Archivo no contiene asentamientos válidos', 'error');
+    return;
+  }
+
+  if (!estadoApp.expedicion.asentamientos) {
+    estadoApp.expedicion.asentamientos = [];
+  }
+
+  const existentes = estadoApp.expedicion.asentamientos;
+  let agregados = 0;
+  let actualizados = 0;
+
+  data.asentamientos.forEach(importado => {
+    // Check if settlement with same ID exists
+    const idx = existentes.findIndex(e => e.id === importado.id);
+
+    if (idx >= 0) {
+      // Replace existing
+      existentes[idx] = importado;
+      actualizados++;
+    } else {
+      // Check if settlement with same name exists
+      const idxNombre = existentes.findIndex(e =>
+        e.nombre.toLowerCase() === importado.nombre.toLowerCase()
+      );
+
+      if (idxNombre >= 0) {
+        // Replace by name match
+        existentes[idxNombre] = { ...importado, id: existentes[idxNombre].id };
+        actualizados++;
+      } else {
+        // Add new with unique ID
+        importado.id = Date.now() + Math.floor(Math.random() * 1000);
+        existentes.push(importado);
+        agregados++;
+      }
+    }
+  });
+
+  guardarExpedicion();
+  renderizarPantalla();
+
+  let mensaje = '📥 Importación completada';
+  if (agregados > 0) mensaje += ` - ${agregados} nuevo(s)`;
+  if (actualizados > 0) mensaje += ` - ${actualizados} actualizado(s)`;
+  mostrarNotificacion(mensaje, 'success');
+}
+
+// =====================================================
+// DROPDOWN MENU FUNCTIONS
+// =====================================================
+
+// Toggle datos dropdown menu
+function toggleDropdownDatos() {
+  const menu = document.getElementById('dropdown-datos-menu');
+  if (menu) {
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+  }
+}
+
+// Close datos dropdown menu
+function cerrarDropdownDatos() {
+  const menu = document.getElementById('dropdown-datos-menu');
+  if (menu) {
+    menu.style.display = 'none';
+  }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function (event) {
+  const dropdown = document.getElementById('dropdown-datos');
+  if (dropdown && !dropdown.contains(event.target)) {
+    cerrarDropdownDatos();
+  }
+});
+
+// =====================================================
+// SMART TOOLTIP POSITIONING
+// =====================================================
+
+// Add smart tooltip behavior to elements with tooltip-container class
+document.addEventListener('mouseover', function (event) {
+  const tooltip = event.target.closest('.tooltip-container');
+  if (!tooltip) return;
+
+  const rect = tooltip.getBoundingClientRect();
+  const viewportHeight = window.innerHeight;
+  const spaceAbove = rect.top;
+  const spaceBelow = viewportHeight - rect.bottom;
+
+  // If more space below OR not enough space above (less than 150px), show tooltip below
+  if (spaceBelow > spaceAbove || spaceAbove < 150) {
+    tooltip.classList.add('tooltip-below');
+    tooltip.classList.remove('tooltip-above');
+  } else {
+    tooltip.classList.add('tooltip-above');
+    tooltip.classList.remove('tooltip-below');
+  }
+});
+
+document.addEventListener('mouseout', function (event) {
+  const tooltip = event.target.closest('.tooltip-container');
+  if (tooltip) {
+    tooltip.classList.remove('tooltip-below', 'tooltip-above');
+  }
+});

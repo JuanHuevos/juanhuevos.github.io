@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Verificación: Cultivo Agrícola</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 2rem;
+            background: #1a1a2e;
+            color: #e0e0e0;
+        }
+
+        .result {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .success {
+            background: #1e4d2b;
+            border: 1px solid #4ade80;
+        }
+
+        .fail {
+            background: #4d1e1e;
+            border: 1px solid #f87171;
+        }
+
+        pre {
+            background: #2a2a4e;
+            padding: 1rem;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        h1 {
+            color: #fbbf24;
+        }
+
+        button {
+            background: #3b82f6;
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🌾 Verificación: Cultivo Agrícola</h1>
+    <p>Esta prueba verifica que la fórmula de producción sea correcta:</p>
+    <pre>Producción = (Base × Cuotas) + ModAgrícola + ModCalidad</pre>
+
+    <h2>Configuración de Prueba</h2>
+    <ul>
+        <li><strong>Trabajadores:</strong> 3 cuotas</li>
+        <li><strong>Producción Base:</strong> 2 Alimento/cuota</li>
+        <li><strong>Bonificación Propiedad (Tierra Fértil):</strong> +1</li>
+        <li><strong>Calidad Total:</strong> 10 → ModCalidad = floor(10/5) = +2</li>
+    </ul>
+    <pre>Esperado: (2 × 3) + 1 + 2 = 9 Alimento</pre>
+
+    <button onclick="ejecutarPrueba()">▶️ Ejecutar Prueba</button>
+
+    <div id="resultado"></div>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/simulation.js"></script>
+    <script>
+        function ejecutarPrueba() {
+            const resultadoDiv = document.getElementById('resultado');
+
+            try {
+                // Reset simulation
+                resetearSimulacion();
+
+                // Configure mock settlement
+                const asentamientoMock = {
+                    grado: "Estamento",
+                    tributo: "Sin Tributo",
+                    propiedades: ["Tierra Fértil"], // +1 Producción Agrícola
+                    peculiaridades: [],
+                    edificios: ["Cultivo Agrícola"],
+                    bonificacionesEventos: { "Calidad": 10 } // Force quality to 10
+                };
+
+                // Initialize state
+                estadoSimulacion.almacen = {};
+                estadoSimulacion.poblacion = [
+                    { id: 1, medidas: 20, asignacion: "edificio:Cultivo Agrícola" },
+                    { id: 2, medidas: 20, asignacion: "edificio:Cultivo Agrícola" },
+                    { id: 3, medidas: 20, asignacion: "edificio:Cultivo Agrícola" }
+                ];
+
+                // Run turn
+                const result = ejecutarTurno(asentamientoMock);
+
+                // Get produced food
+                const alimentoProducido = estadoSimulacion.almacen["Alimento"] || 0;
+
+                // Calculate stats to get actual quality value
+                const stats = calcularEstadisticasTotales(asentamientoMock);
+                const calidadReal = stats.calidadTotal || 0;
+                const modCalidadReal = Math.floor(calidadReal / 5);
+
+                // ModAgricola from Tierra Fértil = 1
+                const modAgricola = stats.bonificaciones["Producción Agrícola"] || 0;
+
+                // Expected: (base * cuotas) + modAgricola + modCalidad
+                const esperado = (2 * 3) + modAgricola + modCalidadReal;
+
+                let html = `
+                    <h2>Resultados</h2>
+                    <ul>
+                        <li><strong>Calidad Calculada:</strong> ${calidadReal}</li>
+                        <li><strong>ModCalidad:</strong> floor(${calidadReal}/5) = ${modCalidadReal}</li>
+                        <li><strong>ModAgrícola:</strong> ${modAgricola}</li>
+                        <li><strong>Producción Real:</strong> ${alimentoProducido} Alimento</li>
+                        <li><strong>Producción Esperada:</strong> ${esperado} Alimento (6 base + ${modAgricola} prop + ${modCalidadReal} cal)</li>
+                    </ul>
+                `;
+
+                if (alimentoProducido === esperado) {
+                    html += `<div class="result success">✅ <strong>ÉXITO:</strong> La fórmula se aplica correctamente.</div>`;
+                } else {
+                    html += `<div class="result fail">❌ <strong>FALLO:</strong> Diferencia de ${alimentoProducido - esperado} unidades.</div>`;
+                }
+
+                resultadoDiv.innerHTML = html;
+
+            } catch (error) {
+                resultadoDiv.innerHTML = `<div class="result fail">❌ <strong>ERROR:</strong> ${error.message}<br><pre>${error.stack}</pre></div>`;
+            }
+        }
+    </script>
+</body>
+
+</html>

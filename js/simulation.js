@@ -1066,6 +1066,7 @@ function avanzarConstrucciones(asentamiento) {
  */
 function registrarComercio(recurso, cantidad, tipo, comerciante = '', turno = null) {
     estadoSimulacion.historialComercio.push({
+        id: Date.now(), // Unique ID for reliable identification
         turno: turno !== null ? turno : estadoSimulacion.turno,
         recurso: recurso,
         cantidad: cantidad,
@@ -1242,14 +1243,20 @@ function calcularProduccionEdificios(edificiosConstruidos, stats = null) {
         // === PRODUCCIÃ“N PASIVA DE EDIFICIOS ===
         // Mercado produce 1 DoblÃ³n pasivo por existir (sin necesidad de trabajadores)
         if (nombreEdificio === "Mercado") {
-            const pasivo = 1;
-            produccion["Doblones"] = produccion["Doblones"] || { total: 0, fuentes: [] };
-            produccion["Doblones"].total += pasivo;
-            produccion["Doblones"].fuentes.push({
-                edificio: `${nombreEdificio} (Pasivo)`,
-                cuotas: 0,
-                produccion: pasivo
-            });
+            const poblacionTotal = (estadoSimulacion.poblacion || []).reduce((sum, p) => sum + (p.cantidad || 1), 0);
+            const modCalidad = Math.floor(calidad / 5);
+            const produccionMercado = 1 + modCalidad + cuotasEfectivas * Math.floor(poblacionTotal / 5);
+
+            if (produccionMercado > 0) {
+                produccion["Doblones"] = produccion["Doblones"] || { total: 0, fuentes: [] };
+                produccion["Doblones"].total += produccionMercado;
+                produccion["Doblones"].fuentes.push({
+                    edificio: nombreEdificio,
+                    cuotas: cuotasEfectivas,
+                    produccion: produccionMercado
+                });
+            }
+            return;
         }
 
         if (cuotasEfectivas <= 0) return;
@@ -1259,10 +1266,10 @@ function calcularProduccionEdificios(edificiosConstruidos, stats = null) {
         let cantidad = 0;
         let receta = null;
 
-        // Modificadores especÃ­ficos (Cultivo AgrÃ­cola)
+        // Modificadores específicos (Cultivo Agrícola)
         let modifier = 0;
-        if (nombreEdificio === "Cultivo AgrÃ­cola") {
-            const modAgricola = bonificaciones["ProducciÃ³n AgrÃ­cola"] || 0;
+        if (nombreEdificio === "Cultivo Agrícola") {
+            const modAgricola = bonificaciones["Producción Agrícola"] || 0;
             const modCalidad = Math.floor(calidad / 5);
             modifier = modAgricola + modCalidad;
         }
@@ -1337,7 +1344,7 @@ function calcularProduccionEdificios(edificiosConstruidos, stats = null) {
                     const bonoCalidad = Math.floor(calidad / 5);
                     cantidad = (base + bonoCalidad) * cuotasEfectivas;
                 } else {
-                    cantidad = pt.cantidad * cuotasEfectivas;
+                    cantidad = (pt.cantidad * cuotasEfectivas) + modifier;
                 }
             }
             // Caso 2: Transformacion (Soldados)
@@ -1361,25 +1368,6 @@ function calcularProduccionEdificios(edificiosConstruidos, stats = null) {
         }
 
         if (recurso) {
-            if (modifier !== 0 && recurso === "Alimento" && nombreEdificio === "Cultivo AgrÃ­cola") {
-                // Apply modifier per effective quota? User said "Modify total produced value by quantity of Crops".
-                // If Modifier is +3, and we have 2 crops.
-                // If we apply +3 per crop -> Total +6. Matches user phrasing.
-                // We apply it per building instance (which this loop is).
-                // However, is it per building or per WORKER?
-                // Usually buildings produce X per worker. If I add modifier to 'cantidad', assuming 'cantidad' is TOTAL for this building.
-                // 'cantidad' calculated below is "base * cuotasEfectivas".
-                // So we add "modifier * cuotasEfectivas"? Or just "modifier"?
-                // "Modificador... modifique el valor producido total".
-                // Usually +1 Production means +1 per building.
-                // If I have 1 building with 3 workers, does it produce +1 or +3?
-                // Standard 4X: +1 per building.
-                // Let's assume +Modifier per Building Instance (if active).
-                if (cuotasEfectivas > 0) {
-                    cantidad += modifier;
-                }
-            }
-
             produccion[recurso] = produccion[recurso] || { total: 0, fuentes: [] };
             produccion[recurso].total += cantidad;
             produccion[recurso].fuentes.push({
