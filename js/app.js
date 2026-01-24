@@ -301,7 +301,11 @@ function calcularMantenimientoEdificios(edificiosConstruidos, globalMaintenanceM
             base = edificio.maintenance;
         }
 
-        let costo = base + globalMaintenanceMod;
+        // Solo aplicar modificador global si el edificio tiene mantenimiento base > 0
+        let costo = base;
+        if (base > 0) {
+            costo = base + globalMaintenanceMod;
+        }
         if (costo < 0) costo = 0;
         total += costo;
     });

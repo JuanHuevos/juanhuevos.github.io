@@ -514,10 +514,17 @@ function faseEconomia(asentamiento) {
         }
 
         // Aplicar Modificador Global al Mantenimiento en Doblones de ESTE edificio
-        // "Que el Mantenimiento en Stats_Invertidas se le sume al valor del Mantenimiento de cualquier edificio."
+        // Si el edificio tiene mantenimiento base 0, NO genera ningún valor de mantenimiento
+        // (ni positivo ni negativo, sin importar los modificadores)
+        if (baseDoblones === 0) {
+            // Skip - edificios con mantenimiento base 0 no contribuyen al mantenimiento total
+            return;
+        }
+
+        // Solo para edificios con mantenimiento base > 0: aplicar modificador
         let costeFinal = baseDoblones + modMantenimientoGlobal;
 
-        // Evitar costes negativos (Â¿o permitimos descuentos que den dinero? Asumimos coste >= 0)
+        // Evitar costes negativos (mínimo 0)
         if (costeFinal < 0) costeFinal = 0;
 
         mantDoblones += costeFinal;

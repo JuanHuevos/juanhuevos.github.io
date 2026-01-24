@@ -494,11 +494,17 @@ function renderizarListaAsentamientos(container) {
                 onclick="cambiarPestanaExpedicion('conexiones')">
           🔗 Conexiones
         </button>
+        <button class="expedicion-tab ${pestanaActiva === 'aspiraciones' ? 'activa' : ''}" 
+                onclick="cambiarPestanaExpedicion('aspiraciones')">
+          ⭐ Aspiraciones
+        </button>
       </nav>
       
       <main class="lista-contenido">
         ${pestanaActiva === 'mapa' ? renderizarVisorMapa(expedicion) :
-      (pestanaActiva === 'asentamientos' ? renderizarPestanaAsentamientos(asentamientos) : renderizarPestanaConexiones(asentamientos))}
+      pestanaActiva === 'asentamientos' ? renderizarPestanaAsentamientos(asentamientos) :
+        pestanaActiva === 'aspiraciones' ? renderizarPestanaAspiraciones() :
+          renderizarPestanaConexiones(asentamientos)}
       </main>
     </div>
   `;
@@ -607,6 +613,193 @@ function renderizarPestanaConexiones(asentamientos) {
       `}
     </div>
   `;
+}
+
+/**
+ * Renderiza la pestaña de Aspiraciones con el árbol de habilidades
+ */
+function renderizarPestanaAspiraciones() {
+  const aspiracionesDesbloqueadas = estadoApp.expedicion?.aspiraciones || [];
+  const categoriaActiva = estadoApp.categoriaAspiracion || 'administrativa';
+  const categoriaData = CATEGORIAS_ASPIRACIONES[categoriaActiva];
+
+  // Filtrar aspiraciones por categoría activa
+  const aspiracionesCategoria = Object.values(ASPIRACIONES).filter(asp => asp.categoria === categoriaActiva);
+
+  // Organizar por nivel
+  const niveles = {};
+  aspiracionesCategoria.forEach(asp => {
+    if (!niveles[asp.nivel]) niveles[asp.nivel] = [];
+    niveles[asp.nivel].push(asp);
+  });
+
+  // Ordenar cada nivel por posición x
+  Object.keys(niveles).forEach(nivel => {
+    niveles[nivel].sort((a, b) => a.posicion.x - b.posicion.x);
+  });
+
+  const renderNodo = (asp) => {
+    const desbloqueada = aspiracionesDesbloqueadas.includes(asp.id);
+    const disponible = asp.prerrequisitos.length === 0 ||
+      asp.prerrequisitos.some(pre => aspiracionesDesbloqueadas.includes(pre));
+
+    let estado = 'bloqueada';
+    if (desbloqueada) estado = 'desbloqueada';
+    else if (disponible) estado = 'disponible';
+
+    return `
+      <div class="aspiracion-nodo aspiracion-${estado}" 
+           data-id="${asp.id}"
+           style="--categoria-color: ${categoriaData.color}"
+           onclick="${disponible || desbloqueada ? `desbloquearAspiracion('${asp.id}')` : ''}">
+        <div class="aspiracion-header">
+          <span class="aspiracion-icono">${asp.icono}</span>
+          <span class="aspiracion-nombre">${asp.nombre}</span>
+          ${asp.costo > 0 ? `<span class="aspiracion-costo">${asp.costo}</span>` : ''}
+        </div>
+        <div class="aspiracion-descripcion">${asp.descripcion}</div>
+        ${asp.cita ? `<div class="aspiracion-cita">"${asp.cita}"</div>` : ''}
+        ${desbloqueada ? '<div class="aspiracion-check">✓</div>' : ''}
+      </div>
+    `;
+  };
+
+  const ideasActuales = estadoApp.expedicion?.ideas || 0;
+
+  return `
+    <div class="aspiraciones-container">
+      <div class="aspiraciones-header">
+        <h3>⭐ Árbol de Aspiraciones</h3>
+        <p>Desbloquea habilidades para mejorar tu expedición</p>
+        <div class="ideas-counter">
+          <span class="ideas-icono">💡</span>
+          <span class="ideas-valor">${ideasActuales}</span>
+          <span class="ideas-label">Ideas disponibles</span>
+        </div>
+      </div>
+
+      <!-- Sub-tabs de Categorías -->
+      <nav class="aspiraciones-categorias">
+        ${Object.values(CATEGORIAS_ASPIRACIONES).map(cat => `
+          <button class="aspiracion-categoria-tab ${categoriaActiva === cat.id ? 'activa' : ''}"
+                  style="--tab-color: ${cat.color}"
+                  onclick="cambiarCategoriaAspiracion('${cat.id}')">
+            <span class="cat-icono">${cat.icono}</span>
+            <span class="cat-nombre">${cat.nombre}</span>
+          </button>
+        `).join('')}
+      </nav>
+
+      <div class="aspiraciones-arbol" style="--categoria-color: ${categoriaData.color}">
+        ${Object.keys(niveles).sort((a, b) => a - b).map(nivel => `
+          <div class="aspiraciones-nivel" data-nivel="${nivel}">
+            ${niveles[nivel].map(asp => renderNodo(asp)).join('')}
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="aspiraciones-info">
+        <div class="aspiraciones-leyenda">
+          <span class="leyenda-item"><span class="leyenda-color bloqueada"></span> Bloqueada</span>
+          <span class="leyenda-item"><span class="leyenda-color disponible" style="border-color: ${categoriaData.color}"></span> Disponible</span>
+          <span class="leyenda-item"><span class="leyenda-color desbloqueada"></span> Desbloqueada</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/**
+ * Cambia la categoría de aspiración activa
+ */
+function cambiarCategoriaAspiracion(categoriaId) {
+  estadoApp.categoriaAspiracion = categoriaId;
+  renderizarPantalla();
+}
+
+/**
+ * Obtiene los efectos agregados de todas las aspiraciones desbloqueadas
+ * Esta función se usa para aplicar modificadores globales a todos los asentamientos
+ * @returns {Object} Objeto con todos los efectos sumados
+ */
+function obtenerEfectosAspiraciones() {
+  const aspiracionesDesbloqueadas = estadoApp.expedicion?.aspiraciones || [];
+  const efectosAgregados = {};
+
+  aspiracionesDesbloqueadas.forEach(aspId => {
+    const asp = ASPIRACIONES[aspId];
+    if (!asp || !asp.efectos) return;
+
+    Object.entries(asp.efectos).forEach(([efecto, valor]) => {
+      if (typeof valor === 'number') {
+        // Sumar valores numéricos
+        efectosAgregados[efecto] = (efectosAgregados[efecto] || 0) + valor;
+      } else if (typeof valor === 'boolean') {
+        // OR lógico para booleanos
+        efectosAgregados[efecto] = efectosAgregados[efecto] || valor;
+      } else if (Array.isArray(valor)) {
+        // Concatenar arrays (ej: DesbloquearEdificios)
+        efectosAgregados[efecto] = [...(efectosAgregados[efecto] || []), ...valor];
+      } else {
+        // Mantener último valor para otros tipos
+        efectosAgregados[efecto] = valor;
+      }
+    });
+  });
+
+  return efectosAgregados;
+}
+
+/**
+ * Alterna una aspiración (desbloquea/bloquea)
+ */
+function desbloquearAspiracion(aspiracionId) {
+  const asp = ASPIRACIONES[aspiracionId];
+  if (!asp) return;
+
+  if (!estadoApp.expedicion.aspiraciones) {
+    estadoApp.expedicion.aspiraciones = [];
+  }
+  if (estadoApp.expedicion.ideas === undefined) {
+    estadoApp.expedicion.ideas = 0;
+  }
+
+  const aspiraciones = estadoApp.expedicion.aspiraciones;
+
+  // Si ya está desbloqueada, desbloquearla (toggle off) y reembolsar Ideas
+  if (aspiraciones.includes(aspiracionId)) {
+    const index = aspiraciones.indexOf(aspiracionId);
+    aspiraciones.splice(index, 1);
+    // Reembolsar el costo en Ideas
+    estadoApp.expedicion.ideas += asp.costo;
+    guardarExpedicion();
+    mostrarNotificacion(`${asp.nombre} deseleccionada (+${asp.costo} Ideas)`, 'info');
+    renderizarPantalla();
+    return;
+  }
+
+  // Verificar prerrequisitos para desbloquear
+  const cumplePrerrequisitos = asp.prerrequisitos.length === 0 ||
+    asp.prerrequisitos.some(pre => aspiraciones.includes(pre));
+
+  if (!cumplePrerrequisitos) {
+    mostrarNotificacion('No cumples los prerrequisitos', 'error');
+    return;
+  }
+
+  // Verificar si tiene suficientes Ideas
+  if (estadoApp.expedicion.ideas < asp.costo) {
+    mostrarNotificacion(`No tienes suficientes Ideas (necesitas ${asp.costo}, tienes ${estadoApp.expedicion.ideas})`, 'error');
+    return;
+  }
+
+  // Gastar Ideas y desbloquear
+  estadoApp.expedicion.ideas -= asp.costo;
+  aspiraciones.push(aspiracionId);
+  guardarExpedicion();
+
+  mostrarNotificacion(`✨ ${asp.nombre} desbloqueada! (-${asp.costo} Ideas)`, 'success');
+  renderizarPantalla();
 }
 
 function crearConexionDesdeUI() {
@@ -2645,7 +2838,9 @@ function renderizarPanelTributo(a, stats) {
   const tributoActual = a.tributo || "Sin Tributo";
   const tributoData = TRIBUTOS[tributoActual] || TRIBUTOS["Sin Tributo"];
   const poblacionTotal = estadoSimulacion?.poblacion?.length || 0;
-  const limiteAdmin = stats.grado.admin || 10;
+  const efectosAsp = obtenerEfectosAspiraciones();
+  const bonusAdmin = efectosAsp.CapacidadAdmin || 0;
+  const limiteAdmin = (stats.grado.admin || 10) + bonusAdmin;
   const poblacionTributable = Math.min(poblacionTotal, limiteAdmin);
   const ingresosEstimados = poblacionTributable * tributoData.doblones;
 
@@ -2774,6 +2969,9 @@ function renderizarContenidoPestana(a, stats) {
 
 function renderizarPestanaResumen(a, stats) {
   const modificadoresPropiedades = calcularModificadoresRecursos(a.propiedades);
+  const efectosAsp = obtenerEfectosAspiraciones();
+  const adminTotal = stats.grado.admin + (efectosAsp.CapacidadAdmin || 0);
+  const guarnicionTotal = stats.grado.guarnicion + (efectosAsp.CapacidadGuarnicion || 0);
   return `
       <div class="hud-stats-principales">
         <div class="stat-card">
@@ -2787,14 +2985,14 @@ function renderizarPestanaResumen(a, stats) {
           <span class="stat-icono">📋</span>
           <div class="stat-info">
             <span class="stat-label">Admin</span>
-            <span class="stat-value">${stats.grado.admin}</span>
+            <span class="stat-value">${adminTotal}</span>
           </div>
         </div>
         <div class="stat-card">
           <span class="stat-icono">⚔️</span>
           <div class="stat-info">
             <span class="stat-label">Guarnición</span>
-            <span class="stat-value">${stats.grado.guarnicion}</span>
+            <span class="stat-value">${guarnicionTotal}</span>
           </div>
         </div>
         <div class="stat-card">

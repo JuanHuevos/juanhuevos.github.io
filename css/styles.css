@@ -7550,3 +7550,271 @@ details[open].panel-tributo .tributo-resumen::before {
   border-bottom-color: transparent;
   border-top-color: rgba(30, 30, 50, 0.98);
 }
+
+/* =====================================================
+   ÁRBOL DE ASPIRACIONES
+   ===================================================== */
+
+.aspiraciones-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.aspiraciones-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.aspiraciones-header h3 {
+  font-size: 1.8rem;
+  color: var(--color-acento);
+  margin-bottom: 0.5rem;
+}
+
+.aspiraciones-header p {
+  color: var(--color-texto-secundario);
+}
+
+/* Category Sub-tabs */
+.aspiraciones-categorias {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.aspiracion-categoria-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radio-md);
+  background: var(--color-fondo-card);
+  color: var(--color-texto);
+  cursor: pointer;
+  transition: all var(--transicion-media);
+  font-size: 0.95rem;
+}
+
+.aspiracion-categoria-tab:hover {
+  border-color: var(--tab-color);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.aspiracion-categoria-tab.activa {
+  border-color: var(--tab-color);
+  background: color-mix(in srgb, var(--tab-color) 20%, transparent);
+  box-shadow: 0 0 15px color-mix(in srgb, var(--tab-color) 30%, transparent);
+}
+
+.aspiracion-categoria-tab .cat-icono {
+  font-size: 1.2rem;
+}
+
+.aspiracion-categoria-tab .cat-nombre {
+  font-weight: 600;
+}
+
+/* Ideas Counter */
+.ideas-counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 255, 0, 0.1));
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: var(--radio-full);
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ideas-icono {
+  font-size: 1.5rem;
+}
+
+.ideas-valor {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #FFD700;
+  font-family: var(--fuente-principal);
+}
+
+.ideas-label {
+  font-size: 0.9rem;
+  color: var(--color-texto-secundario);
+}
+
+.aspiraciones-arbol {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem 0;
+}
+
+.aspiraciones-nivel {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.aspiracion-nodo {
+  position: relative;
+  width: 280px;
+  padding: 1.25rem;
+  border-radius: var(--radio-md);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: var(--color-fondo-card);
+  transition: all var(--transicion-media);
+}
+
+.aspiracion-nodo.aspiracion-bloqueada {
+  opacity: 0.5;
+  filter: grayscale(50%);
+  cursor: not-allowed;
+}
+
+.aspiracion-nodo.aspiracion-disponible {
+  border-color: var(--categoria-color, var(--color-acento));
+  cursor: pointer;
+  box-shadow: 0 0 15px color-mix(in srgb, var(--categoria-color, var(--color-acento)) 30%, transparent);
+}
+
+.aspiracion-nodo.aspiracion-disponible:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 25px color-mix(in srgb, var(--categoria-color, var(--color-acento)) 50%, transparent);
+}
+
+.aspiracion-nodo.aspiracion-desbloqueada {
+  border-color: var(--color-exito);
+  background: rgba(74, 222, 128, 0.1);
+  cursor: pointer;
+}
+
+.aspiracion-nodo.aspiracion-desbloqueada:hover {
+  opacity: 0.8;
+}
+
+.aspiracion-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.aspiracion-icono {
+  font-size: 1.5rem;
+}
+
+.aspiracion-nombre {
+  flex: 1;
+  font-family: var(--fuente-principal);
+  font-weight: 600;
+  font-size: 1rem;
+  color: var(--color-texto);
+}
+
+.aspiracion-costo {
+  padding: 0.25rem 0.75rem;
+  background: rgba(218, 165, 32, 0.2);
+  border-radius: var(--radio-full);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-acento);
+}
+
+.aspiracion-descripcion {
+  font-size: 0.85rem;
+  color: var(--color-texto-secundario);
+  line-height: 1.5;
+}
+
+.aspiracion-cita {
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--color-texto-secundario);
+  opacity: 0.8;
+}
+
+.aspiracion-check {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-exito);
+  border-radius: 50%;
+  font-size: 0.9rem;
+  color: var(--color-fondo);
+  font-weight: bold;
+}
+
+.aspiraciones-info {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.aspiraciones-leyenda {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.leyenda-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--color-texto-secundario);
+}
+
+.leyenda-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 2px solid;
+}
+
+.leyenda-color.bloqueada {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  opacity: 0.5;
+}
+
+.leyenda-color.disponible {
+  border-color: var(--color-acento);
+  background: rgba(218, 165, 32, 0.2);
+}
+
+.leyenda-color.desbloqueada {
+  border-color: var(--color-exito);
+  background: rgba(74, 222, 128, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .aspiraciones-container {
+    padding: 1rem;
+  }
+
+  .aspiracion-nodo {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .aspiraciones-leyenda {
+    gap: 1rem;
+  }
+}

@@ -1818,12 +1818,508 @@ function sonDevocioneOpuestas(tipo1, tipo2) {
     return t1.opuesto === tipo2 || t2.opuesto === tipo1;
 }
 
+// =====================================================
+// CATEGORÍAS DE ASPIRACIONES
+// =====================================================
+const CATEGORIAS_ASPIRACIONES = {
+    "administrativa": {
+        id: "administrativa",
+        nombre: "Administrativa",
+        icono: "🏛️",
+        color: "#DAA520", // Gold
+        descripcion: "Mejoras administrativas y de construcción"
+    },
+    "militar": {
+        id: "militar",
+        nombre: "Militar",
+        icono: "⚔️",
+        color: "#DC143C", // Crimson Red
+        descripcion: "Mejoras de combate y defensa"
+    },
+    "arcana": {
+        id: "arcana",
+        nombre: "Arcana",
+        icono: "🔮",
+        color: "#00CED1", // Cyan
+        descripcion: "Mejoras mágicas y de hechicería"
+    },
+    "fe": {
+        id: "fe",
+        nombre: "Fe",
+        icono: "🙏",
+        color: "#FFD700", // Yellow
+        descripcion: "Mejoras de devoción y religión"
+    },
+    "artificial": {
+        id: "artificial",
+        nombre: "Artificial",
+        icono: "🤖",
+        color: "#20B2AA", // Teal
+        descripcion: "Mejoras de seres artificiales"
+    }
+};
+
+// =====================================================
+// ÁRBOL DE ASPIRACIONES
+// =====================================================
+const ASPIRACIONES = {
+    // ========== ADMINISTRATIVA ==========
+    "fuerza_administrativa": {
+        id: "fuerza_administrativa", categoria: "administrativa",
+        nombre: "Fuerza Administrativa", costo: 0, icono: "🏛️",
+        descripcion: "+10 de Capacidad Administrativa por Asentamiento.",
+        cita: "La burocracia es el mal que nos salva de la barbarie.",
+        prerrequisitos: [], efectos: { "CapacidadAdmin": 10 },
+        nivel: 0, posicion: { x: 0, y: 0 }
+    },
+    "plantillas_construccion": {
+        id: "plantillas_construccion", categoria: "administrativa",
+        nombre: "Plantillas de Construcción", costo: 50, icono: "📐",
+        descripcion: "Al comprar una Construcción con Doblones, se construye en 1 Turno.",
+        prerrequisitos: ["fuerza_administrativa"], efectos: { "ConstruccionInstantaConDoblones": true },
+        nivel: 1, posicion: { x: -1, y: 1 }
+    },
+    "nueva_vision_adm": {
+        id: "nueva_vision_adm", categoria: "administrativa",
+        nombre: "Nueva Visión", costo: 100, icono: "👁️",
+        descripcion: "Puedes iniciar otra rama de Aspiración.",
+        prerrequisitos: ["fuerza_administrativa"], efectos: { "RamaAdicional": 1 },
+        nivel: 1, posicion: { x: 0, y: 1 }
+    },
+    "busqueda_oportunidades": {
+        id: "busqueda_oportunidades", categoria: "administrativa",
+        nombre: "Búsqueda de Oportunidades", costo: 10, icono: "🔍",
+        descripcion: "Puedes Explorar dos veces gratuitamente en lugar de una.",
+        prerrequisitos: [], efectos: { "ExploracionesGratis": 2 },
+        nivel: 0, posicion: { x: 1, y: 0 }
+    },
+    "administracion_urbana": {
+        id: "administracion_urbana", categoria: "administrativa",
+        nombre: "Administración Urbana", costo: 100, icono: "🏙️",
+        descripcion: "Puedes decidir negar el Crecimiento Poblacional por Asentamiento. Las Zonas Residenciales otorgan +1 de Calidad adicional.",
+        prerrequisitos: ["busqueda_oportunidades"], efectos: { "ControlCrecimiento": true, "BonusZonaResidencial": 1 },
+        nivel: 1, posicion: { x: 1, y: 1 }
+    },
+    "planeacion_estructural": {
+        id: "planeacion_estructural", categoria: "administrativa",
+        nombre: "Planeación Estructural", costo: 100, icono: "🏗️",
+        descripcion: "El coste en Doblones de las Construcciones se reduce en -1 Cuota por cada 5.",
+        prerrequisitos: ["plantillas_construccion"], efectos: { "DescuentoConstruccionDoblones": 0.2 },
+        nivel: 2, posicion: { x: -1, y: 2 }
+    },
+    "estructuras_simplificadas": {
+        id: "estructuras_simplificadas", categoria: "administrativa",
+        nombre: "Estructuras Simplificadas", costo: 200, icono: "🔧",
+        descripcion: "Cada 5 Medidas de Mantenimiento en Construcciones, reduces la cantidad de Mantenimiento en -1 Medida de Doblones.",
+        prerrequisitos: ["planeacion_estructural"], efectos: { "DescuentoMantenimiento": 0.2 },
+        nivel: 2, posicion: { x: 0, y: 2 }
+    },
+    "expansion_capacidad": {
+        id: "expansion_capacidad", categoria: "administrativa",
+        nombre: "Expansión de Capacidad", costo: 100, icono: "📦",
+        descripcion: "Por cada +10 de producción de Alimentos que poseas, ganas otro +1. Los Almacenes aumentan la Capacidad de Almacenamiento en +10 adicional.",
+        prerrequisitos: ["administracion_urbana"], efectos: { "BonusProduccionAlimento": 0.1, "BonusAlmacen": 10 },
+        nivel: 2, posicion: { x: 1, y: 2 }
+    },
+    "atraccion_externa": {
+        id: "atraccion_externa", categoria: "administrativa",
+        nombre: "Atracción Externa", costo: 100, icono: "🌟",
+        descripcion: "Liberación de Lujos: Cada Turno puedes pagar 8 Cuotas de Doblones. Ganas +15 de Inmigración.",
+        prerrequisitos: ["administracion_urbana"], efectos: { "OpcionLiberacionLujos": true },
+        nivel: 2, posicion: { x: 2, y: 2 }
+    },
+    "proyectos_expansivos": {
+        id: "proyectos_expansivos", categoria: "administrativa",
+        nombre: "Proyectos Expansivos", costo: 300, icono: "🏰",
+        descripcion: "Adquieres los Diseños de las Construcciones de Atalaya, Castillo y Carretera.",
+        prerrequisitos: ["planeacion_estructural"], efectos: { "DesbloquearEdificios": ["Atalaya", "Castillo", "Carretera"] },
+        nivel: 3, posicion: { x: -1, y: 3 }
+    },
+    "deseos_expansion": {
+        id: "deseos_expansion", categoria: "administrativa",
+        nombre: "Deseos de Expansión", costo: 200, icono: "🌍",
+        descripcion: "Plantar Asentamientos cuesta -6 Cuotas de Suministros o -12 Cuotas de Doblones.",
+        prerrequisitos: ["estructuras_simplificadas"], efectos: { "DescuentoPlantarAsentamiento": 6 },
+        nivel: 3, posicion: { x: 0, y: 3 }
+    },
+    "programa_alimentacion": {
+        id: "programa_alimentacion", categoria: "administrativa",
+        nombre: "Programa de Alimentación", costo: 200, icono: "🍽️",
+        descripcion: "Facilidad Alimentaria: Duplicas el consumo de Alimentos de tus Poblaciones. Duplicas tu Crecimiento Poblacional.",
+        prerrequisitos: ["expansion_capacidad"], efectos: { "OpcionFacilidadAlimentaria": true },
+        nivel: 3, posicion: { x: 1, y: 3 }
+    },
+    "control_migratorio": {
+        id: "control_migratorio", categoria: "administrativa",
+        nombre: "Control Migratorio", costo: 50, icono: "🚢",
+        descripcion: "Reduces el coste de trasladar Cuotas de Poblaciones a la mitad.",
+        prerrequisitos: ["atraccion_externa"], efectos: { "DescuentoTraslado": 0.5 },
+        nivel: 3, posicion: { x: 2, y: 3 }
+    },
+    "nueva_vision_adm2": {
+        id: "nueva_vision_adm2", categoria: "administrativa",
+        nombre: "Nueva Visión", costo: 200, icono: "👁️",
+        descripcion: "Puedes iniciar otra rama de Aspiración.",
+        prerrequisitos: ["deseos_expansion", "programa_alimentacion"], prerrequisitosMin: 1,
+        efectos: { "RamaAdicional": 1 }, nivel: 4, posicion: { x: 0, y: 4 }
+    },
+
+    // ========== MILITAR ==========
+    "dominacion": {
+        id: "dominacion", categoria: "militar",
+        nombre: "Dominación", costo: 0, icono: "⚔️",
+        descripcion: "Todos tus Asentamientos obtienen +3 de Capacidad de Guarnición.",
+        cita: "Esta tierra nos pertenece y lo demostraremos.",
+        prerrequisitos: [], efectos: { "CapacidadGuarnicion": 3 },
+        nivel: 0, posicion: { x: 0, y: 0 }
+    },
+    "cria_bestias": {
+        id: "cria_bestias", categoria: "militar",
+        nombre: "Cría de Bestias", costo: 100, icono: "🐉",
+        descripcion: "Obtienes los Diseños de Unidad: Bestia de Carga, Bestia de Asedio, Gran Monstruo.",
+        prerrequisitos: [], efectos: { "DesbloquearUnidades": ["Bestia de Carga", "Bestia de Asedio", "Gran Monstruo"] },
+        nivel: 0, posicion: { x: 1, y: 0 }
+    },
+    "nueva_vision_mil": {
+        id: "nueva_vision_mil", categoria: "militar",
+        nombre: "Nueva Visión", costo: 200, icono: "👁️",
+        descripcion: "Puedes iniciar otra rama de Aspiración.",
+        prerrequisitos: ["dominacion"], efectos: { "RamaAdicional": 1 },
+        nivel: 1, posicion: { x: -1, y: 1 }
+    },
+    "estructura_militar": {
+        id: "estructura_militar", categoria: "militar",
+        nombre: "Estructura Militar", costo: 100, icono: "🏰",
+        descripcion: "Tus Regimientos ganan +2 de Movilidad en Áreas de Influencia que controlas.",
+        prerrequisitos: ["dominacion"], efectos: { "MovilidadAreaInfluencia": 2 },
+        nivel: 1, posicion: { x: 0, y: 1 }
+    },
+    "ingenieria_militar": {
+        id: "ingenieria_militar", categoria: "militar",
+        nombre: "Ingeniería Militar", costo: 50, icono: "🔩",
+        descripcion: "Los Regimientos con la Opción de Diseño Ingenieros Militares pueden construir Trincheras, Caminos, Campamentos.",
+        prerrequisitos: ["dominacion"], efectos: { "IngenierosConstructores": true },
+        nivel: 1, posicion: { x: 1, y: 1 }
+    },
+    "propiedad_suministros": {
+        id: "propiedad_suministros", categoria: "militar",
+        nombre: "Propiedad de Suministros", costo: 400, icono: "📦",
+        descripcion: "Ganas +1 de Suministros por cada Cuota de Población empleada en su producción.",
+        prerrequisitos: ["cria_bestias"], efectos: { "BonusSuministros": 1 },
+        nivel: 1, posicion: { x: 2, y: 1 }
+    },
+    "eficacia_ejecutiva": {
+        id: "eficacia_ejecutiva", categoria: "militar",
+        nombre: "Eficacia Ejecutiva", costo: 200, icono: "⚡",
+        descripcion: "Reduces en 1 cada 5 de Consumo de Suministros que generen tus Regimientos Desplegados.",
+        prerrequisitos: ["estructura_militar"], efectos: { "DescuentoSuministros": 0.2 },
+        nivel: 2, posicion: { x: -1, y: 2 }
+    },
+    "instruccion_militar": {
+        id: "instruccion_militar", categoria: "militar",
+        nombre: "Instrucción Militar", costo: 300, icono: "🎯",
+        descripcion: "Tus Regimientos ganan +1 de Ataque y +1 de Defensa.",
+        prerrequisitos: ["estructura_militar"], efectos: { "AtaqueRegimientos": 1, "DefensaRegimientos": 1 },
+        nivel: 2, posicion: { x: 0, y: 2 }
+    },
+    "eficacia_productiva": {
+        id: "eficacia_productiva", categoria: "militar",
+        nombre: "Eficacia Productiva", costo: 200, icono: "🔄",
+        descripcion: "Cada que consumas una Cuota de un Recurso al producir un Regimiento, recibes 2 Medidas de ese Recurso.",
+        prerrequisitos: ["ingenieria_militar"], efectos: { "RecuperacionRecursos": 2 },
+        nivel: 2, posicion: { x: 1, y: 2 }
+    },
+    "medicina_aplicada": {
+        id: "medicina_aplicada", categoria: "militar",
+        nombre: "Medicina Aplicada", costo: 200, icono: "💊",
+        descripcion: "Los Regimientos con Médicos de Campo pueden consumir 1 Cuota de Suministros y recuperar 5 de Vitalidad de un Regimiento.",
+        prerrequisitos: ["eficacia_ejecutiva"], efectos: { "MedicosCampo": true },
+        nivel: 3, posicion: { x: -1, y: 3 }
+    },
+    "poder_asedio": {
+        id: "poder_asedio", categoria: "militar",
+        nombre: "Poder de Asedio", costo: 300, icono: "💣",
+        descripcion: "Ganas la Opción de Diseño: Explosivos Pesados.",
+        prerrequisitos: ["instruccion_militar"], efectos: { "DesbloquearDiseño": "Explosivos Pesados" },
+        nivel: 3, posicion: { x: 0, y: 3 }
+    },
+    "tactica_militar": {
+        id: "tactica_militar", categoria: "militar",
+        nombre: "Táctica Militar", costo: 600, icono: "📋",
+        descripcion: "Tus Regimientos ganan +1 de Ataque y +1 de Defensa.",
+        prerrequisitos: ["medicina_aplicada", "poder_asedio"], prerrequisitosMin: 1,
+        efectos: { "AtaqueRegimientos": 1, "DefensaRegimientos": 1 }, nivel: 4, posicion: { x: -1, y: 4 }
+    },
+    "fortaleza": {
+        id: "fortaleza", categoria: "militar",
+        nombre: "Fortaleza", costo: 600, icono: "🛡️",
+        descripcion: "Tus Regimientos ganan +10 de Vitalidad y aumentan su Pérdida de Soldados en +1.",
+        prerrequisitos: ["poder_asedio"], efectos: { "VitalidadRegimientos": 10, "PerdidaSoldados": 1 },
+        nivel: 4, posicion: { x: 0, y: 4 }
+    },
+    "tenacidad": {
+        id: "tenacidad", categoria: "militar",
+        nombre: "Tenacidad", costo: 600, icono: "💪",
+        descripcion: "Tus Regimientos ganan +10 de Resolución.",
+        prerrequisitos: ["poder_asedio"], efectos: { "ResolucionRegimientos": 10 },
+        nivel: 4, posicion: { x: 1, y: 4 }
+    },
+
+    // ========== ARCANA ==========
+    "enfoque_arcano": {
+        id: "enfoque_arcano", categoria: "arcana",
+        nombre: "Enfoque Arcano", costo: 0, icono: "🔮",
+        descripcion: "+1 de Capacidad Mágica de todos tus Asentamientos.",
+        cita: "La magia es la fuerza universal más poderosa y complaciente.",
+        prerrequisitos: [], efectos: { "CapacidadMagica": 1 },
+        nivel: 0, posicion: { x: 0, y: 0 }
+    },
+    "nueva_vision_arc": {
+        id: "nueva_vision_arc", categoria: "arcana",
+        nombre: "Nueva Visión", costo: 200, icono: "👁️",
+        descripcion: "Puedes iniciar otra rama de Aspiración.",
+        prerrequisitos: [], efectos: { "RamaAdicional": 1 },
+        nivel: 0, posicion: { x: 1, y: 0 }
+    },
+    "catalizadores": {
+        id: "catalizadores", categoria: "arcana",
+        nombre: "Catalizadores", costo: 200, icono: "💎",
+        descripcion: "Adquieres el Diseño de la Construcción: Catalizadores.",
+        prerrequisitos: ["enfoque_arcano"], efectos: { "DesbloquearEdificios": ["Catalizadores"] },
+        nivel: 1, posicion: { x: -1, y: 1 }
+    },
+    "guerra_magia": {
+        id: "guerra_magia", categoria: "arcana",
+        nombre: "Guerra y Magia", costo: 100, icono: "⚡",
+        descripcion: "Adquieres el Diseño de la Unidad: Magos de Guerra.",
+        prerrequisitos: ["enfoque_arcano"], efectos: { "DesbloquearUnidades": ["Magos de Guerra"] },
+        nivel: 1, posicion: { x: 0, y: 1 }
+    },
+    "escuela_especializada_1": {
+        id: "escuela_especializada_1", categoria: "arcana",
+        nombre: "Escuela Especializada", costo: 100, icono: "📚",
+        descripcion: "Escoge una Escuela de Magia. Ganas +1 a la Canalización para Hechicerías de esa Escuela.",
+        prerrequisitos: ["enfoque_arcano"], efectos: { "CanalizacionEscuela": 1 },
+        nivel: 1, posicion: { x: 1, y: 1 }
+    },
+    "infinitas_posibilidades_1": {
+        id: "infinitas_posibilidades_1", categoria: "arcana",
+        nombre: "Infinitas Posibilidades", costo: 200, icono: "✨",
+        descripcion: "Aumentas tus Espacios de Hechicería en +1.",
+        prerrequisitos: ["enfoque_arcano"], efectos: { "EspaciosHechiceria": 1 },
+        nivel: 1, posicion: { x: 2, y: 1 }
+    },
+    "ameritismo": {
+        id: "ameritismo", categoria: "arcana",
+        nombre: "Ameritismo", costo: 200, icono: "🗡️",
+        descripcion: "Adquieres las Opciones de Diseño para Unidades: Espadas Encantadas, Cantor de Guerra, Conjuración Extendida.",
+        prerrequisitos: ["guerra_magia"], efectos: { "DesbloquearDiseños": ["Espadas Encantadas", "Cantor de Guerra", "Conjuración Extendida"] },
+        nivel: 2, posicion: { x: 0, y: 2 }
+    },
+    "escuela_especializada_2": {
+        id: "escuela_especializada_2", categoria: "arcana",
+        nombre: "Escuela Especializada 2", costo: 200, icono: "📚",
+        descripcion: "Escoge una Escuela de Magia. Ganas +1 a la Canalización para Hechicerías de esa Escuela.",
+        prerrequisitos: ["escuela_especializada_1"], efectos: { "CanalizacionEscuela": 1 },
+        nivel: 2, posicion: { x: 1, y: 2 }
+    },
+    "magia_construida": {
+        id: "magia_construida", categoria: "arcana",
+        nombre: "Magia Construida", costo: 400, icono: "🏛️",
+        descripcion: "Adquieres el Diseño de la Construcción: Caldera de Archimagos.",
+        prerrequisitos: ["catalizadores"], efectos: { "DesbloquearEdificios": ["Caldera de Archimagos"] },
+        nivel: 3, posicion: { x: -1, y: 3 }
+    },
+    "escuela_especializada_3": {
+        id: "escuela_especializada_3", categoria: "arcana",
+        nombre: "Escuela Especializada 3", costo: 400, icono: "📚",
+        descripcion: "Escoge una Escuela de Magia. Ganas +1 a la Canalización para Hechicerías de esa Escuela.",
+        prerrequisitos: ["escuela_especializada_2"], efectos: { "CanalizacionEscuela": 1 },
+        nivel: 3, posicion: { x: 1, y: 3 }
+    },
+    "infinitas_posibilidades_2": {
+        id: "infinitas_posibilidades_2", categoria: "arcana",
+        nombre: "Infinitas Posibilidades 2", costo: 400, icono: "✨",
+        descripcion: "Aumentas tus Espacios de Hechicería en +1.",
+        prerrequisitos: ["infinitas_posibilidades_1"], efectos: { "EspaciosHechiceria": 1 },
+        nivel: 3, posicion: { x: 2, y: 3 }
+    },
+    "escuela_especializada_4": {
+        id: "escuela_especializada_4", categoria: "arcana",
+        nombre: "Escuela Especializada 4", costo: 600, icono: "📚",
+        descripcion: "Escoge una Escuela de Magia. Ganas +1 a la Canalización para Hechicerías de esa Escuela.",
+        prerrequisitos: ["escuela_especializada_3"], efectos: { "CanalizacionEscuela": 1 },
+        nivel: 4, posicion: { x: 0, y: 4 }
+    },
+
+    // ========== FE ==========
+    "entrega_devocion": {
+        id: "entrega_devocion", categoria: "fe",
+        nombre: "Entrega a la Devoción", costo: 0, icono: "🙏",
+        descripcion: "Cuando una Devoción se Promulgue a Colonos, puedes hacer que se Promulgue a +1.",
+        cita: "Tenemos el deber de respetar y amar lo que creemos, pues nadie más lo hará.",
+        prerrequisitos: [], efectos: { "BonusPromulgacion": 1 },
+        nivel: 0, posicion: { x: 0, y: 0 }
+    },
+    "apertura_1": {
+        id: "apertura_1", categoria: "fe",
+        nombre: "Apertura", costo: 100, icono: "📖",
+        descripcion: "Aumentas tu máximo de Devoción Acumulada en +10.",
+        prerrequisitos: ["entrega_devocion"], efectos: { "MaxDevocion": 10 },
+        nivel: 1, posicion: { x: -1, y: 1 }
+    },
+    "apertura_2": {
+        id: "apertura_2", categoria: "fe",
+        nombre: "Apertura 2", costo: 100, icono: "📖",
+        descripcion: "Aumentas tu máximo de Devoción Acumulada en +10.",
+        prerrequisitos: ["entrega_devocion"], efectos: { "MaxDevocion": 10 },
+        nivel: 1, posicion: { x: 1, y: 1 }
+    },
+    "apertura_3": {
+        id: "apertura_3", categoria: "fe",
+        nombre: "Apertura 3", costo: 300, icono: "📖",
+        descripcion: "Aumentas tu máximo de Devoción Acumulada en +30.",
+        prerrequisitos: ["apertura_1", "apertura_2"], prerrequisitosMin: 1,
+        efectos: { "MaxDevocion": 30 }, nivel: 0, posicion: { x: 0, y: -1 }
+    },
+    "soldados_fe": {
+        id: "soldados_fe", categoria: "fe",
+        nombre: "Soldados de la Fe", costo: 200, icono: "⚔️",
+        descripcion: "Obtienes los Diseños de Unidad: Guerrero Santo y Clérigo.",
+        prerrequisitos: ["apertura_1"], efectos: { "DesbloquearUnidades": ["Guerrero Santo", "Clérigo"] },
+        nivel: 2, posicion: { x: -1, y: 2 }
+    },
+    "nuestra_vision": {
+        id: "nuestra_vision", categoria: "fe",
+        nombre: "Nuestra Visión", costo: 50, icono: "👁️",
+        descripcion: "Requisito: Tener al menos una Devoción entre los Asentamientos que controles. Eliges un tipo de Devoción. Los Edificios que producen Devoción de ese tipo producen +1.",
+        prerrequisitos: ["entrega_devocion"], efectos: { "BonusDevocionTipo": 1 },
+        nivel: 2, posicion: { x: 0, y: 2 }
+    },
+    "agentes_verdad": {
+        id: "agentes_verdad", categoria: "fe",
+        nombre: "Agentes de la Verdad", costo: 200, icono: "📜",
+        descripcion: "Puedes Llamar Devotos: Enviados, Agitadores, Inquisidores.",
+        prerrequisitos: ["apertura_2"], efectos: { "DesbloquearDevotos": ["Enviados", "Agitadores", "Inquisidores"] },
+        nivel: 2, posicion: { x: 1, y: 2 }
+    },
+    "arsenal_superior": {
+        id: "arsenal_superior", categoria: "fe",
+        nombre: "Arsenal Superior", costo: 200, icono: "🗡️",
+        descripcion: "Obtienes las Opciones Diseños: Juramento del Deber, Juramento del Poder y Predestinado.",
+        prerrequisitos: ["soldados_fe"], efectos: { "DesbloquearDiseños": ["Juramento del Deber", "Juramento del Poder", "Predestinado"] },
+        nivel: 3, posicion: { x: -1, y: 3 }
+    },
+    "espada_lengua": {
+        id: "espada_lengua", categoria: "fe",
+        nombre: "Espada y Lengua", costo: 200, icono: "💬",
+        descripcion: "Cuando una Devoción sea Dominante en una Región que controlas, puedes decidir que se Promulgue +2 a los Asentamientos.",
+        prerrequisitos: ["nuestra_vision"], efectos: { "BonusPromulgacionDominante": 2 },
+        nivel: 3, posicion: { x: 0, y: 3 }
+    },
+    "nueva_vision_fe": {
+        id: "nueva_vision_fe", categoria: "fe",
+        nombre: "Nueva Visión", costo: 200, icono: "👁️",
+        descripcion: "Puedes iniciar otra rama de Aspiración.",
+        prerrequisitos: ["arsenal_superior"], efectos: { "RamaAdicional": 1 },
+        nivel: 4, posicion: { x: -1, y: 4 }
+    },
+    "espada_papel": {
+        id: "espada_papel", categoria: "fe",
+        nombre: "Espada y Papel", costo: 300, icono: "📜",
+        descripcion: "Obtienes el Diseño de Construcción: Cúpula de Curios.",
+        prerrequisitos: ["espada_lengua"], efectos: { "DesbloquearEdificios": ["Cúpula de Curios"] },
+        nivel: 4, posicion: { x: 0, y: 4 }
+    },
+    "tierra_prometida": {
+        id: "tierra_prometida", categoria: "fe",
+        nombre: "Tierra Prometida", costo: 400, icono: "🌟",
+        descripcion: "Elige un Asentamiento. Elige una Devoción. Se vuelve Tierra Prometida; la Devoción Dominante de su Área de influencia siempre es la Devoción que elegiste, gana +1 a todos los Recursos y +4 de Calidad.",
+        prerrequisitos: ["espada_lengua"], efectos: { "TierraPrometida": true },
+        nivel: 4, posicion: { x: 1, y: 4 }
+    },
+
+    // ========== ARTIFICIAL ==========
+    "maestria_animacion": {
+        id: "maestria_animacion", categoria: "artificial",
+        nombre: "Maestría de Animación", costo: 0, icono: "🤖",
+        descripcion: "Cada tercera Cuota de Población Artificial no consume Doblones.",
+        cita: "El trabajo genera desigualdad entre las gentes, pero no entre las no-gentes.",
+        prerrequisitos: [], efectos: { "DescuentoArtificiales": 3 },
+        nivel: 0, posicion: { x: 0, y: 0 }
+    },
+    "pensamiento_externo": {
+        id: "pensamiento_externo", categoria: "artificial",
+        nombre: "Pensamiento Externo", costo: 1, icono: "💡",
+        descripcion: "Cada 3 Cuotas de Población Artificial inactiva producen +1 Ideas.",
+        prerrequisitos: [], efectos: { "IdeasPorArtificiales": 1 },
+        nivel: 0, posicion: { x: 1, y: 0 }
+    },
+    "nueva_vision_art": {
+        id: "nueva_vision_art", categoria: "artificial",
+        nombre: "Nueva Visión", costo: 200, icono: "👁️",
+        descripcion: "Puedes iniciar otra rama de Aspiración.",
+        prerrequisitos: ["maestria_animacion"], efectos: { "RamaAdicional": 1 },
+        nivel: 1, posicion: { x: -1, y: 1 }
+    },
+    "fabricacion_general": {
+        id: "fabricacion_general", categoria: "artificial",
+        nombre: "Fabricación General", costo: 100, icono: "🏭",
+        descripcion: "Obtienes el Diseño de la Construcción: Elisium.",
+        prerrequisitos: ["maestria_animacion"], efectos: { "DesbloquearEdificios": ["Elisium"] },
+        nivel: 1, posicion: { x: 0, y: 1 }
+    },
+    "extension_particular": {
+        id: "extension_particular", categoria: "artificial",
+        nombre: "Extensión Particular", costo: 200, icono: "🔗",
+        descripcion: "Los Regimientos Artificiales que controlas pueden alejarse hasta 5 Casillas de tu Área de Influencia.",
+        prerrequisitos: ["maestria_animacion"], efectos: { "RangoArtificiales": 5 },
+        nivel: 1, posicion: { x: 1, y: 1 }
+    },
+    "ejercito_forjado": {
+        id: "ejercito_forjado", categoria: "artificial",
+        nombre: "Ejército Forjado", costo: 200, icono: "⚔️",
+        descripcion: "Obtienes el Diseño de Unidad: Soldado Insensible.",
+        prerrequisitos: ["fabricacion_general"], efectos: { "DesbloquearUnidades": ["Soldado Insensible"] },
+        nivel: 2, posicion: { x: -1, y: 2 }
+    },
+    "construccion_constante": {
+        id: "construccion_constante", categoria: "artificial",
+        nombre: "Construcción Constante", costo: 200, icono: "🔧",
+        descripcion: "Cada Turno puedes crear tu Calidad positiva como Colonos Artificiales adicionales.",
+        prerrequisitos: ["fabricacion_general"], efectos: { "CalidadEnArtificiales": true },
+        nivel: 2, posicion: { x: 0, y: 2 }
+    },
+    "excursion": {
+        id: "excursion", categoria: "artificial",
+        nombre: "Excursión", costo: 300, icono: "🚀",
+        descripcion: "Cada Turno, puedes utilizar 1 de Capacidad Mágica como si estuvieras Canalizando y elegir una Región, creas un pasillo de 5 Casillas de amplitud donde pueden viajar tus Regimientos Artificiales hacia esa Región.",
+        prerrequisitos: ["extension_particular"], efectos: { "PasilloArtificiales": 5 },
+        nivel: 2, posicion: { x: 1, y: 2 }
+    },
+    "proyecto_despertar": {
+        id: "proyecto_despertar", categoria: "artificial",
+        nombre: "Proyecto del Despertar", costo: 300, icono: "⚡",
+        descripcion: "Obtienes el Diseño de Construcción: Estrado de Enervación.",
+        prerrequisitos: ["construccion_constante"], efectos: { "DesbloquearEdificios": ["Estrado de Enervación"] },
+        nivel: 3, posicion: { x: 0, y: 3 }
+    },
+    "nueva_vision_art2": {
+        id: "nueva_vision_art2", categoria: "artificial",
+        nombre: "Nueva Visión", costo: 100, icono: "👁️",
+        descripcion: "Puedes iniciar otra rama de Aspiración.",
+        prerrequisitos: ["excursion"], efectos: { "RamaAdicional": 1 },
+        nivel: 3, posicion: { x: 1, y: 3 }
+    }
+};
+
 // Exportar para uso en otros módulos
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         PROPIEDADES, PECULIARIDADES, GRADOS, TRIBUTOS, RECURSOS,
         BIOMAS_BASE, BIOMAS_ESPECIALES, NIVELES_ABUNDANCIA, INFLUENCIA_MAGICA,
         STATS_INVERTIDAS, esStatInvertida, RECETAS_MANUFACTURA, EDIFICIOS,
+        ASPIRACIONES, CATEGORIAS_ASPIRACIONES,
         TIPOS_DEVOCION, MILAGROS, calcularGradoDevocion, sonDevocioneOpuestas,
         lanzarDado, determinarTipoBioma, determinarSubBioma, fusionarBiomas,
         tirarRecurso, calcularModificadoresRecursos, obtenerModificadorAbundancia
