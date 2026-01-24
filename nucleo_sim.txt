@@ -1,109 +1,70 @@
 {
-  "system_architecture": {
-    "units_of_measurement": {
-      "medida": {
-        "definition": "Unidad atómica de conteo (1 individuo, 1 lingote, 1 ración).",
-        "usage": "Consumo de alimentos, recolección por turno, nacimientos."
+  "engine_core": {
+    "system_name": "Más Allá de lo Salvaje - Economic Core",
+    "unit_conversion_logic": {
+      "medida": "Unidad básica de conteo para producción y consumo (1 unidad).",
+      "cuota": "Unidad administrativa y de coste. Agrupa medidas para facilitar la gestión.",
+      "conversion_table": {
+        "poblacion": "1 Cuota = 20 Colonos (Medidas).",
+        "recursos": "1 Cuota = 10 Medidas de recurso.",
+        "doblones": "1 Cuota = 10 Medidas de oro (Doblones).",
+        "regimientos": "1 Cuota = 1 Regimiento (formado por 10 a 20 colonos)."
       },
-      "cuota": {
-        "definition": "Unidad de gestión macro (Agrupación de medidas).",
-        "usage": "Costes de construcción, mantenimiento de edificios, entrenamiento militar.",
-        "conversion_rates": {
-          "poblacion": "1 Cuota = 20 Medidas (Colonos).",
-          "recursos": "1 Cuota = 10 Medidas (Materiales).",
-          "doblones": "1 Cuota = 10 Medidas (Oro)."
-        }
-      }
+      "application_rule": "Los edificios y mantenimientos se pagan en CUOTAS. La producción genera MEDIDAS que se acumulan hasta formar CUOTAS."
     }
   },
-  "population_engine": {
-    "initial_setup": "El jugador elige 4 Cuotas iniciales (80 medidas totales). Puede mezclar Roles y Naturalezas.",
-    "population_nature_alignment": {
-      "neutral": {
-        "examples": "Humanos, Elfos, Medianos.",
-        "quality_modifier": 0,
-        "devotion_compatibility": "Universal (Cualquier devoción).",
-        "special_traits": "Adaptabilidad estándar."
-      },
-      "positiva": {
-        "examples": "Aasimares, Seres Celestiales.",
-        "quality_modifier": 2,
-        "devotion_compatibility": "Solo Devociones Positivas/Neutras.",
-        "special_traits": "Aumentan la paz social; rechazan el sacrilegio."
-      },
-      "negativa": {
-        "examples": "Orcos, Drows, Tieflings.",
-        "quality_modifier": -2,
-        "devotion_compatibility": "Solo Devociones Negativas/Neutras.",
-        "special_traits": "Alta resistencia física; generan fricción social."
-      },
-      "monstruo_salvaje": {
-        "examples": "Kobolds, Goblins, Minotauros.",
-        "quality_modifier": -1,
-        "devotion_compatibility": "Específicas de su especie.",
-        "special_traits": "Bono de +5 a la Inmigración Latente (se reproducen/llegan más rápido)."
-      }
-    },
-    "population_roles": {
+  "population_profiles": {
+    "logic": "El jugador inicia con 4 Cuotas de libre elección. El crecimiento genera Plebeyos; el entrenamiento los transforma en otros tipos.",
+    "types": {
       "plebeyo": {
-        "function": "Crecimiento y labor general.",
-        "benefit": "Genera 1 Medida de colono/turno (crecimiento natural).",
-        "requirement": "Ninguno."
+        "role": "Fuerza de trabajo base y crecimiento demográfico.",
+        "bonus": "Cada Cuota genera 1 colono (medida) extra por turno si hay alimento.",
+        "production_yield": "Base para agricultura y construcción."
       },
       "academico": {
-        "function": "Investigación y Magia.",
-        "benefit": "Genera +3 Ideas/turno. Necesario para edificios avanzados.",
-        "requirement": "Construcción: Escuela o Academia."
+        "role": "Investigación y desarrollo.",
+        "bonus": "+3 Ideas por turno (usadas para planos y tecnología).",
+        "production_yield": "Indispensable para edificios de Grado 2 y 3."
       },
       "artesano": {
-        "function": "Producción y Comercio.",
-        "benefit": "Genera +1 Medida de Doblón extra en Mercados. Produce recursos procesados.",
-        "requirement": "Construcción: Taller o Manufactura."
+        "role": "Manufactura especializada.",
+        "bonus": "+1 Medida de Doblón extra por cuota en mercados.",
+        "production_yield": "Transforma recursos básicos en procesados (Acero, Muebles, etc)."
       },
       "soldado": {
-        "function": "Defensa y Orden.",
-        "benefit": "Mantiene la guarnición. Mitiga penalizadores de eventos negativos.",
-        "requirement": "Construcción: Cuartel."
+        "role": "Seguridad y guarnición.",
+        "bonus": "Reduce el impacto de penalizadores de 'Inseguridad' en la calidad.",
+        "production_yield": "Nula en recursos; consume doble mantenimiento en campaña."
       }
     }
   },
-  "resource_and_yield_logic": {
-    "production_types": {
-      "pasiva": {
-        "logic": "Generada por el Bioma y Edificios.",
-        "formula": "Base_Bioma + Modificadores_Edificios - 1 (Penalizador por falta de supervisión)."
-      },
-      "activa_extraccion_si": {
-        "logic": "Asignar 1 Cuota de Población (20 medidas) a una fuente de recurso.",
-        "formula": "Base_Bioma + Modificadores_Edificios + 2 (Bono de supervisión)."
-      }
+  "resource_production_algorithm": {
+    "extraction_modes": {
+      "pasiva": "Producción automática generada por el Bioma y los Edificios (Ej: Cultivo G1 = +2 Medidas Alimento/Turno).",
+      "activa_extraccion_si": "Asignar 1 Cuota de Población a un recurso específico = +2 Medidas de producción adicionales.",
+      "activa_extraccion_no": "Si no se asigna población, el recurso se extrae pasivamente con un penalizador de -1 a la medida de producción."
     },
-    "abundance_multipliers": {
-      "inexistente": 0,
-      "escaso": 0.5,
-      "normal": 1.0,
-      "abundante": 1.5,
-      "exuberante": 2.0
+    "calculation_formula": {
+      "total_yield": "((Base_Bioma + Modificadores_Propiedad) * Nivel_Abundancia) + Bonus_Edificios + Bonus_Poblacion_Activa",
+      "constraints": "Si el Alimento (Medidas) < Población (Medidas), la producción activa se reduce al 50% por debilidad física."
     }
   },
-  "turn_cycle_algorithm": {
-    "phase_1_sustenance": {
-      "action": "Restar 1 Medida Alimento por cada 1 Medida de Población.",
-      "failure_state": "Hambruna: Calidad -8, Crecimiento natural 0, Muertes 1d4 medidas/turno."
+  "economic_cycle": {
+    "step_1_consumption": {
+      "food_check": "1 Medida Alimento per 1 Colono. Faltante = Hambruna (-8 Calidad).",
+      "gold_check": "Mantenimiento total en Cuotas de Doblones. Si Saldo < 0 = Deserción de población."
     },
-    "phase_2_economy": {
-      "action_A": "Sumar Medidas de producción al Almacén.",
-      "action_B": "Recaudar Tributos (Cuotas Pop * Nivel_Tributo) en Medidas de Doblones.",
-      "action_C": "Pagar Mantenimiento de Edificios en Cuotas de Doblones."
+    "step_2_generation": {
+      "resource_accrual": "Sumar Medidas producidas al almacén. Cada 10 Medidas = 1 Cuota disponible para construcción.",
+      "tax_collection": "Población_Total (Cuotas) * Severidad_Tributo = Ingreso en Medidas de Doblones."
     },
-    "phase_3_growth": {
-      "latent_immigration": "Inmigración_Base + Calidad_Total + (Bono_Monstruo si aplica).",
-      "natural_reproduction": "Sumar 1 Medida de colono por cada Cuota de Plebeyo activa.",
-      "consolidation": "Cada 20 Medidas nuevas de población -> Crear 1 Cuota de Plebeyos."
+    "step_3_demographics": {
+      "growth_calculation": "Nuevos_Colonos = (Inmigración_Base + Calidad_Total) + (Cuotas_Plebeyos * 1).",
+      "transformation": "Si el usuario activa 'Entrenar', restar 1 Cuota Plebeyo y sumar 1 Cuota de perfil destino tras X turnos."
     }
   },
-  "administrative_limits": {
-    "storage": "Límite de Cuotas definido por Almacenes. El exceso de Medidas se pierde al final del turno.",
-    "control": "Si Población (Medidas) > Capacidad_Administrativa, Inmigración se reduce al 50%."
+  "storage_logic": {
+    "limit": "Capacidad máxima de Cuotas definida por el Grado del Asentamiento + Almacenes.",
+    "overflow": "Cualquier Medida que supere el límite al final del turno se pierde por falta de logística."
   }
 }

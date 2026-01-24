@@ -186,8 +186,85 @@ function calcularEstadisticasTotales(asentamiento) {
     });
 
     // Calcular penalización de calidad por tamaño de población (-1 por cada 10 cuotas)
+    // Calcular penalización de calidad por tamaño de población (-1 por cada 10 cuotas)
     const poblacionTotal = estadoSimulacion?.poblacion?.length || 0;
     const penalizacionPoblacion = Math.floor(poblacionTotal / 10);
+
+    // =====================================================
+    // EFECTOS DE ASPIRACIONES
+    // =====================================================
+    const aspiraciones = estadoApp.expedicion?.aspiraciones || [];
+    let ingresosAspiraciones = 0;
+
+    // --- CÍVICA: Gloria de la Ciudad ---
+    if (aspiraciones.includes("civ_gloria")) {
+        // Condición: 4 o menos asentamientos
+        const numAsentamientos = estadoApp.expedicion?.asentamientos?.length || 0;
+        if (numAsentamientos <= 4) {
+            // Gloria Activa
+            bonificacionesTotales["Calidad"] = (bonificacionesTotales["Calidad"] || 0) + 2; // Base Gloria
+
+            // Sub-efectos de Gloria
+            if (aspiraciones.includes("civ_admin_compacta")) {
+                // +2 a toda la producción (Bonus global)
+                // Se aplica a las bonificaciones de TODOS los recursos
+                // Esto es complejo, lo simplificamos agregando un bonificador genérico que `calcularProduccionTotal` deberá entender
+                // O iteramos sobre las bonificaciones existentes.
+                // Mejor: Usamos una flag o añadimos bonificadores 'globales' si el sistema lo soporta.
+                // Como `calcularProduccionTotal` suma `bonificaciones[nombre]`, podemos inyectar un bonus genérico
+                // PERO el sistema actual espera nombres de recursos.
+                // HACK: Modificamos las stats "Global" si existiera, o añadimos a mano a los recursos clave si están en bonificaciones.
+                // Para simplificar: Calidad afecta producción, pero esto es +2 DIRECTO.
+                // Lo añadiremos como propiedad especial "ProduccionGlobal"
+                bonificacionesTotales["ProduccionGlobal"] = 2;
+            }
+            if (aspiraciones.includes("civ_fortin")) {
+                // +50 Estructura. No implementado en stats, pero lo dejamos registrado.
+                bonificacionesTotales["Estructura"] = 50;
+            }
+            if (aspiraciones.includes("civ_resistencia")) {
+                // +4 Ataque/Defensa
+                bonificacionesTotales["Ataque"] = 4;
+                bonificacionesTotales["Defensa"] = 4;
+            }
+            if (aspiraciones.includes("civ_vigilia")) {
+                bonificacionesTotales["Deteccion"] = 3;
+            }
+            if (aspiraciones.includes("civ_gentilicio")) {
+                // +1 Recurso por población. Esto afecta 'calcularExtraccionActiva'.
+                bonificacionesTotales["ProduccionPoblacion"] = 1;
+            }
+            if (aspiraciones.includes("civ_gestion")) {
+                // Mantenimiento reducido.
+                // Esto reduce el mantenimiento calculado abajo si todos tienen gloria.
+                // Asumimos que si estamos aquÃ­, ESTE tiene gloria.
+                // El efecto requiere "todos tus asentamientos". 
+                // Como la condición de gloria es global (<=4), si uno tiene gloria, todos la tienen (si tienen la aspiración desbloqueada, que es global).
+                // Entonces SÍ aplica.
+                bonificacionesTotales["ReduccionMantenimiento"] = 1; // -1 cada 3
+            }
+        }
+    }
+
+    // --- COMERCIAL ---
+    if (aspiraciones.includes("com_mandato")) {
+        ingresosAspiraciones += 2;
+    }
+    if (aspiraciones.includes("com_fomentar")) {
+        // +1 Doblón cada 10 de población
+        ingresosAspiraciones += Math.floor(poblacionTotal / 10);
+    }
+
+    // --- ARCANA ---
+    if (aspiraciones.includes("enfoque_arcano")) {
+        bonificacionesTotales["CapacidadMagica"] = (bonificacionesTotales["CapacidadMagica"] || 0) + 1;
+    }
+
+    // --- MILITAR ---
+    if (aspiraciones.includes("dominacion")) {
+        bonificacionesTotales["CapacidadGuarnicion"] = (bonificacionesTotales["CapacidadGuarnicion"] || 0) + 3;
+    }
+
 
     return {
         grado: gradoStats,
@@ -195,10 +272,11 @@ function calcularEstadisticasTotales(asentamiento) {
         tributo: tributoData,
         efectosEdificios: efectosEdificios,
         mantenimientoEdificios: mantenimientoTotal,
-        calidadTotal: gradoStats.calidad + (bonificaciones["Calidad"] || 0) + tributoData.calidad + (efectosEdificios.calidad || 0) + calidadEventos - penalizacionPoblacion,
+        calidadTotal: gradoStats.calidad + (bonificacionesTotales["Calidad"] || 0) + tributoData.calidad + (efectosEdificios.calidad || 0) + calidadEventos - penalizacionPoblacion,
         penalizacionPoblacion: penalizacionPoblacion, // Para mostrar en UI
         almacenamientoBonus: efectosEdificios.almacenamiento || 0,
-        ingresosDoblones: efectosEdificios.ingresos || 0
+        ingresosDoblones: efectosEdificios.ingresos || 0,
+        ingresosAspiraciones: ingresosAspiraciones
     };
 }
 

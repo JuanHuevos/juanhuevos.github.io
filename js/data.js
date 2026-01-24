@@ -768,8 +768,8 @@ const EDIFICIOS = {
             { "Metal": 4 },
             { "Doblones": 12 }
         ],
-        descripcion: "Mejora a Poblado. Calidad +2.",
-        efectos: { "Calidad": 2 },
+        descripcion: "Mejora a Poblado.",
+        // efectos eliminados - beneficios de calidad contenidos en GRADOS
         effect: "Habilita Grado Poblado"
     },
     "Palacio": {
@@ -1352,8 +1352,9 @@ const RECETAS_MANUFACTURA = {
 const GRADOS = {
     "Estamento": {
         nivel: 1,
+        requisitoPoblacion: 0, // Base - sin requisito
         calidad: 1,
-        admin: 15,
+        admin: 15, // Capacidad Administrativa: 15 Cuotas (300 Colonos)
         guarnicion: 5,
         almacenamiento: 20,
         inmigracion: 10,
@@ -1362,8 +1363,9 @@ const GRADOS = {
     },
     "Poblado": {
         nivel: 2,
+        requisitoPoblacion: 300, // Requiere 300 Colonos
         calidad: 3,
-        admin: 25,
+        admin: 25, // Capacidad Administrativa: 25 Cuotas (500 Colonos)
         guarnicion: 10,
         almacenamiento: 30,
         inmigracion: 15,
@@ -1372,18 +1374,20 @@ const GRADOS = {
     },
     "Urbe": {
         nivel: 3,
+        requisitoPoblacion: 600, // Requiere 600 Colonos
         calidad: 5,
-        admin: 40,
+        admin: 40, // Capacidad Administrativa: 40 Cuotas (800 Colonos)
         guarnicion: 25,
         almacenamiento: 40,
-        inmigracion: 10,
+        inmigracion: 15, // Corregido según imagen
         icono: "🏛️",
         descripcion: "Ciudad próspera"
     },
     "Megalópolis": {
         nivel: 4,
+        requisitoPoblacion: 3000, // Requiere 3000 Colonos
         calidad: 15,
-        admin: 300,
+        admin: 300, // Capacidad Administrativa: 300 Cuotas (6000 Colonos)
         guarnicion: 80,
         almacenamiento: 120,
         inmigracion: 20,
@@ -1856,6 +1860,20 @@ const CATEGORIAS_ASPIRACIONES = {
         icono: "🤖",
         color: "#20B2AA", // Teal
         descripcion: "Mejoras de seres artificiales"
+    },
+    "comercial": {
+        id: "comercial",
+        nombre: "Comercial",
+        icono: "💰",
+        color: "#FFA500", // Orange
+        descripcion: "Mejoras de comercio y economía"
+    },
+    "civica": {
+        id: "civica",
+        nombre: "Cívica",
+        icono: "🏛️",
+        color: "#BA55D3", // MediumOrchid
+        descripcion: "Mejoras de la ciudad y su gloria"
     }
 };
 
@@ -2310,6 +2328,173 @@ const ASPIRACIONES = {
         descripcion: "Puedes iniciar otra rama de Aspiración.",
         prerrequisitos: ["excursion"], efectos: { "RamaAdicional": 1 },
         nivel: 3, posicion: { x: 1, y: 3 }
+    },
+
+    // ========== COMERCIAL ==========
+    "com_mandato": {
+        id: "com_mandato", categoria: "comercial",
+        nombre: "Mandato Comercial", costo: 0, icono: "📜",
+        descripcion: "Tus Asentamientos producen +2 Doblones.",
+        cita: "No todo lo que brilla es oro, pero todo lo que brilla es poderoso.",
+        prerrequisitos: [], efectos: { "ProduccionDoblones": 2 },
+        nivel: 0, posicion: { x: 0, y: 0 }
+    },
+    "com_atraer": {
+        id: "com_atraer", categoria: "comercial",
+        nombre: "Atraer por Dividendos", costo: 50, icono: "💸",
+        descripcion: "Cuando otro Reino te compra un recurso, ganas 1 Doblón por cada Cuota de Recurso comprada.",
+        prerrequisitos: ["com_mandato"], efectos: { "DividendoPorVenta": 1 },
+        nivel: 0, posicion: { x: 0, y: 1 }
+    },
+    "com_nueva_vision_com": {
+        id: "com_nueva_vision_com", categoria: "comercial",
+        nombre: "Nueva Visión", costo: 100, icono: "👁️",
+        descripcion: "Puedes iniciar otra rama de Aspiración.",
+        prerrequisitos: ["com_atraer"], efectos: { "RamaAdicional": 1 },
+        nivel: 0, posicion: { x: 1, y: 1 }
+    },
+    "com_cobro": {
+        id: "com_cobro", categoria: "comercial",
+        nombre: "Cobro de Regalías", costo: 50, icono: "👑",
+        descripcion: "Por cada Cuota de Recursos o Doblones que vendas, ganas 2 Doblones.",
+        prerrequisitos: ["com_atraer"], efectos: { "BonusVenta": 2 },
+        nivel: 1, posicion: { x: 0, y: 2 }
+    },
+    "com_fomentar": {
+        id: "com_fomentar", categoria: "comercial",
+        nombre: "Fomentar Independientes", costo: 100, icono: "🌾",
+        descripcion: "Cada 10 Cuotas de Población producen +1 Doblón.",
+        prerrequisitos: ["com_cobro"], efectos: { "IngresoPorPoblacion": 0.1 },
+        nivel: 1, posicion: { x: -1, y: 2 }
+    },
+    "com_rutas": {
+        id: "com_rutas", categoria: "comercial",
+        nombre: "Rutas Largas", costo: 100, icono: "🐫",
+        descripcion: "Aumentas el alcance del Caravanserai en +23 Casillas.",
+        prerrequisitos: ["com_cobro"], efectos: { "AlcanceCaraversai": 23 },
+        nivel: 1, posicion: { x: 1, y: 2 }
+    },
+    "com_conjuras": {
+        id: "com_conjuras", categoria: "comercial",
+        nombre: "Conjuras Comitivas", costo: 200, icono: "🤝",
+        descripcion: "Cuando estableces un Pacto Comercial, ganas 1 Doblón o 1 Recurso adicional por cada 4 Doblones o Recursos que recibas.",
+        prerrequisitos: ["com_cobro"], efectos: { "BonusPacto": 0.25 },
+        nivel: 2, posicion: { x: 0, y: 3 }
+    },
+    "com_barrio": {
+        id: "com_barrio", categoria: "comercial",
+        nombre: "Barrio Comercial", costo: 200, icono: "🏘️",
+        descripcion: "Obtienes el Diseño de Construcción: Barrio Comercial.",
+        prerrequisitos: ["com_conjuras"], efectos: { "DesbloquearEdificios": ["Barrio Comercial"] },
+        nivel: 2, posicion: { x: -1, y: 3 }
+    },
+    "com_sucursales": {
+        id: "com_sucursales", categoria: "comercial",
+        nombre: "Sucursales Externas", costo: 200, icono: "🏪",
+        descripcion: "Obtienes el Diseño de Construcción: Sucursal Externa.",
+        prerrequisitos: ["com_conjuras"], efectos: { "DesbloquearEdificios": ["Sucursal Externa"] },
+        nivel: 2, posicion: { x: 1, y: 3 }
+    },
+    "com_nueva_vision_com2": {
+        id: "com_nueva_vision_com2", categoria: "comercial",
+        nombre: "Nueva Visión", costo: 100, icono: "👁️",
+        descripcion: "Puedes iniciar otra rama de Aspiración.",
+        prerrequisitos: ["com_conjuras"], efectos: { "RamaAdicional": 1 },
+        nivel: 3, posicion: { x: 0, y: 4 }
+    },
+
+    // ========== CÍVICA ==========
+    "civ_gloria": {
+        id: "civ_gloria", categoria: "civica",
+        nombre: "Gloria de la Ciudad", costo: 0, icono: "🏛️",
+        descripcion: "Mientras tengas 4 o menos Asentamientos, tus Asentamientos ganan Gloria de la Ciudad (+2 Calidad).",
+        cita: "Grandeza es más sinónimo de magnífico que de enorme.",
+        prerrequisitos: [], efectos: { "GloriaCiudad": true },
+        nivel: 0, posicion: { x: 0, y: 0 }
+    },
+    "civ_admin_compacta": {
+        id: "civ_admin_compacta", categoria: "civica",
+        nombre: "Administración Compacta", costo: 100, icono: "📉",
+        descripcion: "Gloria de la Ciudad: Ganas +2 a toda la producción de Recursos, Recursos Exóticos y Recursos Procesados que extraigas.",
+        prerrequisitos: ["civ_gloria"], efectos: { "BonusGloriaProduccion": 2 },
+        nivel: 0, posicion: { x: 0, y: 1 }
+    },
+    "civ_capital": {
+        id: "civ_capital", categoria: "civica",
+        nombre: "Capital del Recurso", costo: 50, icono: "💎",
+        descripcion: "Por cada Asentamiento y al fundar uno, elige cualquier Recurso. Gloria de la Ciudad: Los Recursos elegidos aumentan su abundancia.",
+        prerrequisitos: ["civ_admin_compacta"], efectos: { "BonusGloriaAbundancia": true },
+        nivel: 1, posicion: { x: -1, y: 1 }
+    },
+    "civ_fortin": {
+        id: "civ_fortin", categoria: "civica",
+        nombre: "Fortín", costo: 50, icono: "🛡️",
+        descripcion: "Gloria de la Ciudad: El Asentamiento gana +50 de Estructura, recupera +10 de Estructura cada Turno.",
+        prerrequisitos: ["civ_admin_compacta"], efectos: { "BonusGloriaEstructura": true },
+        nivel: 1, posicion: { x: 1, y: 1 }
+    },
+    "civ_concilio": {
+        id: "civ_concilio", categoria: "civica",
+        nombre: "Concilio de Ideas", costo: 100, icono: "💡",
+        descripcion: "Gloria de la Ciudad: Cada edificio que produzca Ideas, produce +2 Ideas adicionales.",
+        prerrequisitos: ["civ_admin_compacta"], efectos: { "BonusGloriaIdeas": 2 },
+        nivel: 0, posicion: { x: 0, y: 2 }
+    },
+    "civ_institucion": {
+        id: "civ_institucion", categoria: "civica",
+        nombre: "Institución Bursátil", costo: 100, icono: "🏦",
+        descripcion: "Gloria de la Ciudad: Cada vez que obtengas Doblones al vender o pierdas Doblones al comprar, ganas 1 de Influencia por cada 5 Cuotas.",
+        prerrequisitos: ["civ_concilio"], efectos: { "BonusGloriaInfluenciaDoblones": true },
+        nivel: 1, posicion: { x: -1, y: 2 }
+    },
+    "civ_resistencia": {
+        id: "civ_resistencia", categoria: "civica",
+        nombre: "Resistencia Total", costo: 100, icono: "✊",
+        descripcion: "Gloria de la Ciudad: El Asentamiento gana +4 de Ataque y Defensa.",
+        prerrequisitos: ["civ_concilio"], efectos: { "BonusGloriaCombate": 4 },
+        nivel: 1, posicion: { x: 1, y: 2 }
+    },
+    "civ_nueva_vision_civ": {
+        id: "civ_nueva_vision_civ", categoria: "civica",
+        nombre: "Nueva Visión", costo: 200, icono: "👁️",
+        descripcion: "Puedes iniciar otra rama de Aspiración.",
+        prerrequisitos: ["civ_institucion"], efectos: { "RamaAdicional": 1 },
+        nivel: 2, posicion: { x: -2, y: 2 }
+    },
+    "civ_gentilicio": {
+        id: "civ_gentilicio", categoria: "civica",
+        nombre: "Gentilicio Fornido", costo: 200, icono: "💪",
+        descripcion: "Gloria de la Ciudad: Cada Cuota de Población produce +1 del Recurso al que se le asigne.",
+        prerrequisitos: ["civ_institucion"], efectos: { "BonusGloriaPoblacionProd": 1 },
+        nivel: 2, posicion: { x: -1, y: 3 }
+    },
+    "civ_vigilia": {
+        id: "civ_vigilia", categoria: "civica",
+        nombre: "Vigilia Intensiva", costo: 100, icono: "🔭",
+        descripcion: "Gloria de la Ciudad: El Asentamiento gana +3 de Detección en su Área de Influencia.",
+        prerrequisitos: ["civ_resistencia"], efectos: { "BonusGloriaDeteccion": 3 },
+        nivel: 2, posicion: { x: 2, y: 2 }
+    },
+    "civ_auxilio": {
+        id: "civ_auxilio", categoria: "civica",
+        nombre: "Auxilio Externo", costo: 200, icono: "🚑",
+        descripcion: "Cuando estés en un conflicto Defensivo, puedes gastar 30 de Influencia. Reclutas al instante 2 Regimientos de Soldados de Intervención por cada Asentamiento con Gloria de la Ciudad.",
+        prerrequisitos: ["civ_resistencia"], efectos: { "BonusGloriaSoldadosIntervencion": 2 },
+        nivel: 2, posicion: { x: 1, y: 3 }
+    },
+    "civ_ciudades_oro": {
+        id: "civ_ciudades_oro", categoria: "civica",
+        nombre: "Ciudades de Oro", costo: 100, icono: "🕌",
+        descripcion: "Gloria de la Ciudad: Los Mercados soportan +2 Cuotas de Artesanos. Las Oficinas de Administración y las Casas de la Moneda soportan +1 Cuota de Académicos.",
+        prerrequisitos: ["civ_concilio"], efectos: { "BonusGloriaCapacidadOficios": true },
+        nivel: 2, posicion: { x: 0, y: 3 }
+    },
+    "civ_gestion": {
+        id: "civ_gestion", categoria: "civica",
+        nombre: "Gestión Meticulosa", costo: 100, icono: "📊",
+        descripcion: "Si todos tus Asentamientos tienen Gloria de la Ciudad, cada 3 de Mantenimiento y Consumo de Suministros de tus Regimientos se reducen en 1.",
+        prerrequisitos: ["civ_ciudades_oro"], efectos: { "BonusGloriaMantenimiento": true },
+        nivel: 3, posicion: { x: 0, y: 4 }
     }
 };
 

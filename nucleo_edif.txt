@@ -1,132 +1,163 @@
 {
-  "building_engine_v3": {
-    "core_definitions": {
-      "cuota_ciudadano": {
-        "definition": "Grupo de 20 colonos asignados a una función específica.",
-        "assignment_logic": "Un edificio puede 'Requerir' (coste fijo) o 'Asignar' (trabajo activo) cuotas.",
-        "active_extraction_bonus": "+2 medidas de producción si se asigna 1 cuota de ciudadano a la labor."
-      },
-      "building_logic": {
-        "multiplicity": {
-          "UNIQUE": "Solo se puede construir una vez por asentamiento. Se dispara si el requisito es 'No tener X'.",
-          "MULTIPLE": "Se pueden construir varias instancias para stackear beneficios (Ej: Zona Residencial)."
-        },
-        "upgrade_rules": "Coste = Base * Nivel. Tiempo = Fijo. Beneficio = Acumulativo."
-      }
+  "building_engine_core": {
+    "upgrade_logic": {
+      "cost_scaling": "Coste_Nivel_N = Coste_Base * N",
+      "time_scaling": "Tiempo_Construccion = Tiempo_Base (constante por nivel)",
+      "benefit_scaling": "Los beneficios son aditivos (Nivel 2 = Beneficio G1 + Beneficio G2)."
     },
     "construction_registry": {
       "tier_1_estamento": {
-        "requirements": "Grado 1",
+        "requirements": "Asentamiento Grado 1",
         "buildings": {
           "alcaldia": {
-            "multiplicity": "UNIQUE",
+            "type": "progression",
+            "max_grade": 1,
             "time": 2,
             "costs": { "madera": 6, "piedra": 2, "roca": 5, "metales": 4, "doblones": 12 },
-            "citizen_requirement": "0",
-            "effect": "Trigger de ascenso a Grado 2."
+            "effect": "Permite ascender a Asentamiento Grado 2 (Poblado)."
           },
           "zona_residencial": {
-            "multiplicity": "MULTIPLE",
+            "max_grade": 3,
             "time": 2,
             "maintenance": 1,
             "costs": { "madera": 3, "piedra": 1, "roca": 3, "doblones": 7 },
-            "citizen_effect": { "capacidad_vivienda_cuotas": 2 },
-            "effect": "Aumenta el límite de población controlable."
+            "effect": { "capacidad_admin": 2, "almacen_cuotas": 10 }
           },
-          "mercado": {
-            "multiplicity": "UNIQUE",
-            "requirements": ["No tener Mercado"],
+          "cultivo_agricola": {
+            "max_grade": 3,
             "time": 2,
-            "costs": { "madera": 3, "piedra": 1, "roca": 3, "doblones": 7 },
-            "citizen_requirement": "1 Cuota de Artesano (opcional para bonus)",
-            "effect": "Habilita comercio local y global."
+            "maintenance": 0,
+            "costs": { "madera": 2, "piedra": 1, "doblones": 4 },
+            "effect": { "produccion_alimentos_medidas": 2, "soporte_poblacion_cuotas": 3 }
+          },
+          "almacen": {
+            "max_grade": 4,
+            "time": 2,
+            "maintenance": 0,
+            "costs": { "madera": 4, "piedra": 1, "doblones": 9 },
+            "effect": { "capacidad_almacen_cuotas": 10 }
           },
           "manufactura": {
-            "multiplicity": "MULTIPLE",
+            "max_grade": 4,
             "time": 4,
             "maintenance": 2,
             "costs": { "madera": 5, "piedra": 3, "metales": 4, "doblones": 11 },
-            "citizen_requirement": "1 Cuota de Artesano (Obligatorio)",
-            "effect": "Transforma materias primas en recursos procesados."
+            "effect": { "produccion_recurso_procesado": 1, "requiere": "Artesano" }
           },
-          "cultivo_agricola": {
-            "multiplicity": "MULTIPLE",
+          "archivo": {
+            "max_grade": 1,
             "time": 2,
-            "costs": { "madera": 2, "piedra": 1, "doblones": 4 },
-            "citizen_assignment": "1 Cuota de Plebeyo para +2 medidas alimento",
-            "effect": "Genera sustento para la población."
+            "maintenance": 0,
+            "costs": { "madera": 3, "fibra_util": 1, "roca": 3, "doblones": 9 },
+            "effect": { "capacidad_admin_cuotas": 20 }
+          },
+          "taller": {
+            "max_grade": 1,
+            "time": 2,
+            "maintenance": 0,
+            "costs": { "madera": 4, "roca": 3, "metales": 2, "doblones": 9 },
+            "effect": { "permite_armas_herramientas": true, "bonus_artesano": 1 }
           }
         }
       },
       "tier_2_poblado": {
-        "requirements": "Grado 2 + Alcaldía",
+        "requirements": "Asentamiento Grado 2 + Alcaldía construida",
         "buildings": {
-          "oficina_coordinacion": {
-            "multiplicity": "MULTIPLE",
-            "limit": 3,
-            "requirements": ["Ser un Poblado", "No tener más de 3 Oficinas"],
-            "time": 2,
-            "maintenance": 1,
-            "costs": { "doblones": 5, "papiro": 2 },
-            "citizen_requirement": "1 Cuota de Ciudadano",
-            "effect": "Automatiza la recolección de un recurso regional."
-          },
-          "escuela": {
-            "multiplicity": "UNIQUE",
-            "requirements": ["Ser un Poblado"],
+          "palacio": {
+            "type": "progression",
+            "max_grade": 1,
             "time": 5,
-            "maintenance": 1,
-            "costs": { "madera": 11, "mueble": 1, "piedra": 4, "pieles": 6, "doblones": 38 },
-            "citizen_transformation": "Convierte Cuota Plebeyo -> Cuota Académico",
-            "effect": "+1 Idea/Turno."
+            "costs": { "madera": 12, "metales": 4, "roca": 10, "metales_cuotas": 8, "doblones": 24 },
+            "effect": "Permite ascender a Asentamiento Grado 3 (Urbe)."
           },
           "forja": {
-            "multiplicity": "MULTIPLE",
-            "requirements": ["Taller previo"],
+            "max_grade": 2,
             "time": 5,
             "maintenance": 1,
             "costs": { "metales": 12, "herramientas": 2, "roca": 15, "doblones": 44 },
-            "citizen_requirement": "2 Cuotas de Artesano",
-            "effect": "+2 medidas de Acero/Turno."
+            "effect": { "produccion_acero_medidas": 2 }
           },
-          "bahia": {
-            "multiplicity": "UNIQUE",
-            "requirements": ["Estar en la costa"],
+          "escuela": {
+            "max_grade": 2,
+            "time": 5,
+            "maintenance": 1,
+            "costs": { "madera": 11, "mueble": 1, "piedra": 4, "pieles": 6, "doblones": 38 },
+            "effect": { "generacion_ideas": 1, "permite_entrenamiento_academico": true }
+          },
+          "gremio_intelectual": {
+            "max_grade": 5,
+            "time": 3,
+            "maintenance": 1,
+            "costs": { "papiro": 2, "influencia": 1, "doblones": 12 },
+            "effect": { "generacion_ideas": 1, "limite_academicos_cuotas": 3 }
+          },
+          "jurisprudencia_ics": {
+            "max_grade": 5,
             "time": 2,
-            "costs": { "madera": 3, "doblones": 7 },
-            "citizen_assignment": "1 Cuota de Ciudadano para +1 Pesca",
-            "effect": "Habilita construcción de Navíos."
+            "maintenance": 0,
+            "costs": { "papiro": 2, "doblones": 5 },
+            "effect": { "influencia_politica": 1 }
+          },
+          "generador": {
+            "max_grade": 1,
+            "time": 4,
+            "maintenance": 2,
+            "costs": { "roca": 10, "metales": 4, "madera": 12, "metales_procesados": 4, "doblones": 39 },
+            "effect": { "calidad_asentamiento": 2, "desbloquea_electricidad": true }
           }
         }
       },
       "tier_3_urbe": {
-        "requirements": "Grado 3 + Palacio",
+        "requirements": "Asentamiento Grado 3 + Palacio construido",
         "buildings": {
+          "ala_concejal": {
+            "type": "progression",
+            "max_grade": 1,
+            "time": 10,
+            "costs": { "madera": 28, "piedra": 9, "roca": 23, "metales": 19, "doblones": 60 },
+            "effect": "Permite ascender a Asentamiento Grado 4 (Megalópolis)."
+          },
+          "universidad": {
+            "max_grade": 3,
+            "time": 6,
+            "maintenance": 4,
+            "costs": { "madera": 250, "muebles": 5, "roca": 208, "doblones": 565 },
+            "effect": { "generacion_ideas": 3, "academicos_bonus": 3 }
+          },
           "casa_moneda": {
-            "multiplicity": "UNIQUE",
-            "requirements": ["Tener Oficina de Coordinación"],
+            "max_grade": 1,
             "time": 8,
             "maintenance": 2,
             "costs": { "piel_procesada": 20, "papiro": 10, "roca": 160, "doblones": 350 },
-            "citizen_requirement": "1 Cuota de Académico",
-            "effect": "+1 Doblón por cada 10 cuotas de población total."
+            "effect": { "ingreso_doblones_por_poblacion": 1 }
           },
-          "baluarte": {
-            "multiplicity": "MULTIPLE",
-            "limit": 2,
-            "requirements": ["No tener más de 2 Baluartes"],
-            "time": 9,
-            "costs": { "acero": 41, "roca": 25, "doblones": 650 },
-            "citizen_requirement": "2 Cuotas de Soldado (Guarnición)",
-            "effect": "+2 Ataque/Defensa Asedio, +30 Estructura."
+          "alambrados": {
+            "max_grade": 1,
+            "time": 8,
+            "maintenance": 1,
+            "costs": { "acero": 15, "doblones": 233 },
+            "effect": { "calidad_asentamiento": 4, "produccion_recursos_global": 1 }
           }
         }
       }
     },
-    "automation_logic_for_ia": {
-      "multiplicity_check": "IF building.requirements CONTAINS 'No tener' THEN multiplicity = UNIQUE ELSE MULTIPLE",
-      "citizen_lock": "IF available_citizen_quotas < building.citizen_requirement THEN action = BLOCK_CONSTRUCTION",
-      "maintenance_priority": "Al inicio del turno, las Cuotas de Ciudadano asignadas a mantenimiento se restan de la población disponible para extracción activa."
+    "infrastructure_logic": {
+      "caminos": {
+        "cost_base": "1 Roca",
+        "maintenance": "1 Cuota Doblón por cada 3 tramos",
+        "effect": "Aumenta movilidad en +1 en la casilla."
+      },
+      "muros": {
+        "max_grade": 5,
+        "cost_base": { "madera": 14, "metales": 4, "roca": 11, "doblones": 30 },
+        "effect": { "defensa_asedio": 1, "puntos_estructura": 20 }
+      }
     }
+  },
+  "automation_rules_for_ia": {
+    "rule_1": "No se puede construir un edificio de Tier N si el Asentamiento no ha alcanzado el Grado N.",
+    "rule_2": "La mejora de un edificio consume los mismos recursos multiplicados por el nivel de destino.",
+    "rule_3": "Los edificios de 'Progresión' (Alcaldía, Palacio, Ala Concejal) son triggers obligatorios para desbloquear el siguiente set de edificios.",
+    "rule_4": "El mantenimiento de edificios se resta del total de Doblones al inicio del turno. Si no hay fondos, el edificio queda 'Inactivo' y sus efectos se anulan."
   }
 }

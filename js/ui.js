@@ -4850,6 +4850,40 @@ function agregarComercioDesdeUI() {
 
   if (!estadoSimulacion) return;
 
+  // ASPIRACIONES: Efectos de comercio
+  const aspiraciones = estadoApp.expedicion?.aspiraciones || [];
+
+  if (recurso === 'Doblones') {
+    // Institución Bursátil: Ganas 1 de Influencia por cada 5 Cuotas (Doblones)
+    if (aspiraciones.includes("civ_institucion")) {
+      const bonusInfluencia = Math.floor(cantidad / 5);
+      if (bonusInfluencia > 0) {
+        estadoSimulacion.recursosEspeciales.influencia = (estadoSimulacion.recursosEspeciales.influencia || 0) + bonusInfluencia;
+        mostrarNotificacion(`🏛️ Institución Bursátil: +${bonusInfluencia} Influencia`, 'exito');
+      }
+    }
+  } else if (tipo === 'salida') {
+    // Mandato Comercial Branch
+    let bonusDoblones = 0;
+    let reasons = [];
+
+    if (aspiraciones.includes("com_atraer")) {
+      // Ganas 1 Doblón por cada Cuota de Recurso vendida
+      bonusDoblones += cantidad;
+      reasons.push("Atraer por Dividendos");
+    }
+    if (aspiraciones.includes("com_cobro")) {
+      // Ganas 2 Doblones por cada Cuota vendida
+      bonusDoblones += (cantidad * 2);
+      reasons.push("Cobro de Regalías");
+    }
+
+    if (bonusDoblones > 0) {
+      estadoSimulacion.doblones = (estadoSimulacion.doblones || 0) + bonusDoblones;
+      mostrarNotificacion(`💰 Bonus Comercial (${reasons.join(", ")}): +${bonusDoblones} Doblones`, 'exito');
+    }
+  }
+
   // Inicializar almacen si no existe
   if (!estadoSimulacion.almacen) estadoSimulacion.almacen = {};
 

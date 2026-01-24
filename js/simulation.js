@@ -224,9 +224,20 @@ function calcularProduccionTotal(recursos, calidad, bonificaciones = {}) {
         // modPropiedades base del recurso + bonificadores de peculiaridades/propiedades
         let modTotal = data.modPropiedades || 0;
 
-        // Aplicar bonificaciones especÃ­ficas del recurso
+        // Aplicar bonificaciones específicas del recurso
         if (bonificaciones[nombre]) {
             modTotal += bonificaciones[nombre];
+        }
+
+        // Aplicar Producción Global (Aspiraciones/Eventos)
+        if (bonificaciones["ProduccionGlobal"]) {
+            modTotal += bonificaciones["ProduccionGlobal"];
+        }
+
+        // Aplicar Producción por Población (Aspiraciones: +1 por cada trabajador)
+        // Se suma al modificador total de la propiedad
+        if (bonificaciones["ProduccionPoblacion"] && numTrabajadores > 0) {
+            modTotal += (bonificaciones["ProduccionPoblacion"] * numTrabajadores);
         }
 
         // Aplicar bonificaciones con "Cualquier" (ej: "Cualquier pesca: +1")
@@ -476,13 +487,18 @@ function faseEconomia(asentamiento) {
         logear(`  ðŸ’° Tributos recaudados: ${dobleonesTributo} doblones`);
     }
 
+    // --- INGRESOS POR ASPIRACIONES ---
+    if (stats.ingresosAspiraciones > 0) {
+        estadoSimulacion.doblones += stats.ingresosAspiraciones;
+        logear(`  💰 Ingresos por Aspiraciones: +${stats.ingresosAspiraciones} Doblones`);
+    }
+
     // --- MANTENIMIENTO EDIFICIOS ---
     let mantDoblones = 0;
     let mantRecursos = {};
     const edificiosList = asentamiento.edificios || [];
 
     // Obtener modificador global de Mantenimiento desde las stats (Bioma/Propiedades)
-    // Nota: "stats" ya se calculÃ³ arriba en lÃ­nea 304
     const modMantenimientoGlobal = stats.bonificaciones["Mantenimiento"] || 0;
 
     edificiosList.forEach(item => {
@@ -514,10 +530,7 @@ function faseEconomia(asentamiento) {
         }
 
         // Aplicar Modificador Global al Mantenimiento en Doblones de ESTE edificio
-        // Si el edificio tiene mantenimiento base 0, NO genera ningún valor de mantenimiento
-        // (ni positivo ni negativo, sin importar los modificadores)
         if (baseDoblones === 0) {
-            // Skip - edificios con mantenimiento base 0 no contribuyen al mantenimiento total
             return;
         }
 
@@ -530,9 +543,18 @@ function faseEconomia(asentamiento) {
         mantDoblones += costeFinal;
     });
 
+    // Reducción por Gestión Meticulosa (cada 3 se reduce en 1)
+    if (stats.bonificaciones && stats.bonificaciones["ReduccionMantenimiento"]) {
+        const reduccion = Math.floor(mantDoblones / 3);
+        if (reduccion > 0) {
+            mantDoblones -= reduccion;
+            logear(`  📉 Gestión Meticulosa: -${reduccion} Doblones de mantenimiento`);
+        }
+    }
+
     if (mantDoblones > 0) {
         estadoSimulacion.doblones -= mantDoblones;
-        logear(`  ðŸ’¸ Mantenimiento pagado: ${mantDoblones} Doblones`);
+        logear(`  💸 Mantenimiento pagado: ${mantDoblones} Doblones`);
         // Handle Debt? Simple for now.
     }
 
@@ -828,9 +850,57 @@ function faseDevocion() {
 // HELPERS
 // =====================================================
 
+/**
+ * Sanitiza un mensaje para exportación a .txt (elimina emojis problemáticos)
+ */
+function sanitizarParaTxt(mensaje) {
+    // Mapa de emojis a texto ASCII
+    const mapaEmojis = {
+        '📋': '[FASE]',
+        '✓': '[OK]',
+        '✔': '[OK]',
+        '⚠️': '[ALERTA]',
+        '⚠': '[ALERTA]',
+        '💀': '[MUERTE]',
+        '☠️': '[HAMBRUNA]',
+        '📦': '[PRODUCCION]',
+        '💰': '[ORO]',
+        '💸': '[GASTO]',
+        '🤖': '[ARTIFICIAL]',
+        '👥': '[INMIGRACION]',
+        '👶': '[REPRODUCCION]',
+        '🎉': '[NUEVO]',
+        '📊': '[PENDIENTE]',
+        '🙏': '[DEVOCION]',
+        '═': '=',
+        '╔': '+',
+        '╗': '+',
+        '╚': '+',
+        '╝': '+',
+        '║': '|',
+        '❌': '[X]',
+        '⭐': '*',
+        '💡': '[IDEA]'
+    };
+
+    let resultado = mensaje;
+    Object.entries(mapaEmojis).forEach(([emoji, texto]) => {
+        resultado = resultado.split(emoji).join(texto);
+    });
+
+    // Eliminar cualquier emoji restante (rango Unicode)
+    resultado = resultado.replace(/[\u{1F300}-\u{1F9FF}]/gu, '');
+    resultado = resultado.replace(/[\u{2600}-\u{26FF}]/gu, '');
+    resultado = resultado.replace(/[\u{2700}-\u{27BF}]/gu, '');
+
+    return resultado;
+}
+
 function logear(mensaje) {
-    estadoSimulacion.logTurno.push(mensaje);
-    console.log(mensaje);
+    // Guardar versión sanitizada para exportación
+    const mensajeSanitizado = sanitizarParaTxt(mensaje);
+    estadoSimulacion.logTurno.push(mensajeSanitizado);
+    console.log(mensaje); // Consola puede mostrar emojis
 }
 
 function aplicarMuertes(cantidad) {
@@ -1045,6 +1115,32 @@ function avanzarConstrucciones(asentamiento) {
 
                         // Inicializar estado del edificio
                         estadoSimulacion.edificiosEstado[c.id] = { grado: 1 };
+
+                        // === VERIFICAR SI EL EDIFICIO HABILITA UN NUEVO GRADO ===
+                        const edificioDef = typeof EDIFICIOS !== 'undefined' ? EDIFICIOS[c.nombre] : null;
+                        if (edificioDef && edificioDef.effect) {
+                            const matchGrado = edificioDef.effect.match(/Habilita Grado (\S+)/);
+                            if (matchGrado) {
+                                const nuevoGrado = matchGrado[1]; // "Poblado", "Urbe", "Megalópolis"
+                                const gradoData = typeof GRADOS !== 'undefined' ? GRADOS[nuevoGrado] : null;
+
+                                if (gradoData) {
+                                    // Verificar requisito de población
+                                    const poblacionActual = obtenerPoblacionTotal();
+                                    const requisito = gradoData.requisitoPoblacion || 0;
+
+                                    if (poblacionActual >= requisito) {
+                                        // Aplicar el nuevo grado
+                                        asentamiento.grado = nuevoGrado;
+                                        logear(`🏛️ ¡Asentamiento mejorado a ${nuevoGrado}!`);
+                                        logear(`   📊 Nuevos beneficios: Calidad +${gradoData.calidad}, Admin ${gradoData.admin}, Guarnición ${gradoData.guarnicion}`);
+                                    } else {
+                                        logear(`⚠️ Requisito de población no alcanzado: ${poblacionActual}/${requisito} colonos`);
+                                        logear(`   El edificio está construido pero el grado no se aplicará hasta tener suficiente población.`);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
 
